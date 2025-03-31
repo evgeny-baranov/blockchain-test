@@ -1,0 +1,14 @@
+// server/tsconfig.json
+{
+  "extends": "../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "baseUrl": "./src",
+    "paths": {
+      "@blockchain/*": [
+        "../../blockchain/dist/*",
+      ]
+    }
+  }
+}

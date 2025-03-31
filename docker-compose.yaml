@@ -1,0 +1,40 @@
+services:
+
+  server:
+    image: node:20
+    tty: true
+    env_file:
+      - .env
+    ports:
+      - ${SERVER_PORT}:${SERVER_PORT}
+    working_dir: /server
+    networks:
+      - hardhat-network
+    volumes:
+      - ./tsconfig.base.json:/tsconfig.base.json
+      - ./server:/server
+      - ./server/node_modules:/node_modules
+      - ./blockchain/artifacts:/blockchain/artifacts
+      - ./blockchain/typechain-types:/blockchain/typechain-types
+      - ./blockchain/dist:/blockchain/dist
+    command: npm run start:dev
+
+  blockchain:
+    image: node:20
+    tty: true
+    ports:
+      - "8545:8545"
+    volumes:
+      - ./tsconfig.base.json:/tsconfig.base.json
+      - ./blockchain:/blockchain
+      - ./blockchain/node_modules:/node_modules
+    working_dir: /blockchain
+    env_file:
+      - .env
+    command: bash -c "npx hardhat node"
+    networks:
+      - hardhat-network
+
+networks:
+  hardhat-network:
+    driver: bridge
