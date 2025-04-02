@@ -16,6 +16,7 @@ import {ICommissionContainer} from "../utils/commission-container/ICommissionCon
 import {IRegistry} from "../utils/access-manager/IRegistry.sol";
 import {Version} from "../utils/version/Version.sol";
 import {IAuctionV1} from "./IAuctionV1.sol";
+import "hardhat/console.sol";
 
 contract AuctionV1 is
 IAuctionV1,
@@ -211,6 +212,7 @@ ReentrancyGuardUpgradeable
         // Check if the bid amount meets the minimum requirement
         uint256 minimumBid = auction.highestBid + auction.bidIncrement;
         if (bidAmount < minimumBid) {
+            console.log('BidTooLow');
             revert BidTooLow(auctionId, bidAmount, minimumBid);
         }
 
@@ -218,11 +220,13 @@ ReentrancyGuardUpgradeable
         IERC20 creditToken = IERC20(auction.creditAsset);
 
         if (!creditToken.transferFrom(_msgSender(), address(this), bidAmount)) {
+            console.log('BidTransferFailed');
             revert BidTransferFailed(_msgSender(), address(this), bidAmount);
         }
 
         if (auction.highestBidder != address(0)) {
             if (!creditToken.transfer(auction.highestBidder, auction.highestBid)) {
+                console.log('RefundTransferFailed');
                 revert RefundTransferFailed(auction.highestBidder, auction.highestBid);
             }
         }
@@ -239,11 +243,6 @@ ReentrancyGuardUpgradeable
     }
 
     function placeBid(uint256 auctionId, uint256 bidAmount) external nonReentrant {
-        _placeBid(auctionId, bidAmount);
-    }
-
-    function placeBid(address debitAssetAddress, uint256 tokenId, uint256 bidAmount) external nonReentrant {
-        uint256 auctionId = getAuctionId(debitAssetAddress, tokenId);
         _placeBid(auctionId, bidAmount);
     }
 
@@ -313,6 +312,7 @@ ReentrancyGuardUpgradeable
         AuctionPoolData storage auction = auctions[auctionId];
 
         if (auction.closeTime <= Time.timestamp()) {
+            console.log('isAuctionNotClosed', auction.closeTime, Time.timestamp());
             revert AuctionClosed(auctionId, auction.closeTime, Time.timestamp());
         }
 

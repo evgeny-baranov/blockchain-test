@@ -80,8 +80,6 @@ interface IAuctionV1 {
         uint32 claimDelay
     ) external payable;
 
-    function placeBid(address debitAssetAddress, uint256 tokenId, uint256 bidAmount) external;
-
     function placeBid(uint256 auctionId, uint256 bidAmount) external;
 
     function finaliseAuction(uint256 auctionId) external;
