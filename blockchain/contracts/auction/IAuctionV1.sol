@@ -82,6 +82,8 @@ interface IAuctionV1 {
 
     function placeBid(address debitAssetAddress, uint256 tokenId, uint256 bidAmount) external;
 
+    function placeBid(uint256 auctionId, uint256 bidAmount) external;
+
     function finaliseAuction(uint256 auctionId) external;
 
     function cancelAuction(uint256 auctionId) external;

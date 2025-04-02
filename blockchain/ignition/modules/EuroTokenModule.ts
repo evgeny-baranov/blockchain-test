@@ -11,7 +11,13 @@ export default buildModule("EuroTokenModule", (builder) => {
 
     const initialize = builder.encodeFunctionCall(implementation, "initialize", [accessManager]);
 
-    const euroToken = builder.contract('ERC1967Proxy', [implementation, initialize]);
+    const euroToken = builder.contract(
+        'ERC1967Proxy',
+        [implementation, initialize],
+        {
+            id: 'EuroTokenProxy'
+        }
+    );
 
     return {euroToken};
 });

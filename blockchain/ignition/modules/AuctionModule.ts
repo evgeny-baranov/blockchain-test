@@ -11,7 +11,13 @@ export default buildModule("AuctionModule", (builder) => {
 
     const initialize = builder.encodeFunctionCall(implementation, "initialize", [accessManager]);
 
-    const auction = builder.contract('ERC1967Proxy', [implementation, initialize]);
+    const auction = builder.contract(
+        'ERC1967Proxy',
+        [implementation, initialize],
+        {
+            id: 'AuctionProxy'
+        }
+    );
 
     return {auction};
 });
