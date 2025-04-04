@@ -355,6 +355,12 @@ ReentrancyGuardUpgradeable
         _addAllowedToken(creditAsset);
     }
 
+    function removeAllowedToken(address creditAsset) external
+    restricted
+    {
+        _removeAllowedToken(creditAsset);
+    }
+
     function commissionAmount(address creditAsset) external view
     returns (uint256) {
         uint256 amount = _commissionAmount(creditAsset);

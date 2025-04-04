@@ -13,9 +13,16 @@ import {IAuctionV1} from "../auction/IAuctionV1.sol";
 
 library Roles {
     struct RoleSelectors {
+        string label;
         uint64 role;
         bytes4[] selectors;
     }
+
+    string public constant ADMIN_ROLE_LABEL = "ADMIN";
+    string public constant UPGRADE_ROLE_LABEL = "UPGRADE";
+    string public constant MINTER_ROLE_LABEL = "MINTER";
+    string public constant BURNER_ROLE_LABEL = "BURNER";
+    string public constant ACCOUNTANT_ROLE_LABEL = "ACCOUNTANT";
 
     uint64 public constant ADMIN_ROLE = 0;
     uint64 public constant UPGRADE_ROLE = 1;
@@ -27,21 +34,25 @@ library Roles {
         RoleSelectors[] memory roleSelectors = new RoleSelectors[](4);
 
         roleSelectors[0] = RoleSelectors({
+            label: ADMIN_ROLE_LABEL,
             role: BURNER_ROLE,
             selectors: getBurnSelectors()
         });
 
         roleSelectors[1] = RoleSelectors({
+            label: MINTER_ROLE_LABEL,
             role: MINTER_ROLE,
             selectors: getMintSelectors()
         });
 
         roleSelectors[2] = RoleSelectors({
+            label: UPGRADE_ROLE_LABEL,
             role: UPGRADE_ROLE,
             selectors: getUpgradeSelectors()
         });
 
         roleSelectors[2] = RoleSelectors({
+            label: ACCOUNTANT_ROLE_LABEL,
             role: ACCOUNTANT_ROLE,
             selectors: getAccountantSelectors()
         });

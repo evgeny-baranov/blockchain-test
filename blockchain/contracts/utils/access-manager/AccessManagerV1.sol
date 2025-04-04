@@ -26,7 +26,7 @@ UUPSUpgradeable
         __AccessManager_init(initialAdmin);
 
         _registerContract(
-        keccak256(abi.encodePacked("AccessManager")),
+            keccak256(abi.encodePacked("AccessManager")),
             address(this)
         );
     }
@@ -64,5 +64,38 @@ UUPSUpgradeable
 
     function getRegisteredContracts() public view returns (bytes32[] memory, address[] memory) {
         return _getRegisteredContracts();
+    }
+
+    function getRolesOf(address user) public view returns (uint64[] memory) {
+        return _getRolesOf(user);
+    }
+
+    function _grantRole(
+        uint64 roleId,
+        address account,
+        uint32 grantDelay,
+        uint32 executionDelay
+    ) internal override returns (bool) {
+        bool newMember = super._grantRole(
+            roleId,
+            account,
+            grantDelay,
+            executionDelay
+        );
+
+        _registerUserRole(account, roleId);
+
+        return newMember;
+    }
+
+
+    function _revokeRole(uint64 roleId, address account) internal override returns (bool) {
+        bool revoked = super._revokeRole(roleId, account);
+
+        if (revoked) {
+            _unregisterUserRole(account, roleId);
+        }
+
+        return revoked;
     }
 }
