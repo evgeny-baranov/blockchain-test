@@ -78,6 +78,4 @@ export class ChainContractsService implements OnModuleInit {
 
         console.log(`✅ Loaded proxied contracts for chain ${this.chainId}:`, this.addresses);
     }
-
-
 }

@@ -4,9 +4,10 @@ import {AccessManager__factory} from '@blockchain/factories/contracts';
 import {SignerService} from "../signer/signer.service";
 import {AccessManager} from '@blockchain/contracts';
 import {ConfigService} from "@nestjs/config";
+import {AddressLike} from "ethers";
 
 @Injectable()
-export class AccessManagerService implements OnModuleInit {
+export class ContractService implements OnModuleInit {
     private contract!: AccessManager;
     private readonly contractAddress!: string;
 
@@ -26,11 +27,7 @@ export class AccessManagerService implements OnModuleInit {
         );
     }
 
-    async roles() {
-        return await this.contract.getRoles();
-    }
-
-    async getContract(name: string) {
+    async getContract(name: string): Promise<AddressLike> {
         return await this.contract.getContract(name)
     }
 
@@ -38,13 +35,9 @@ export class AccessManagerService implements OnModuleInit {
         const [names, addresses] = await this.contract.getRegisteredContracts();
         const contractMap = new Map<string, string>();
 
-        console.log('names:', names, 'addresses:', addresses);
-
         names.forEach((name: string, index: number) => {
             contractMap.set(name, addresses[index]);
         });
-
-        console.log('contractMap: ', contractMap);
 
         return Object.fromEntries(contractMap);
     }
