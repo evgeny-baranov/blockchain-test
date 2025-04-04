@@ -34,7 +34,7 @@ library Roles {
         RoleSelectors[] memory roleSelectors = new RoleSelectors[](4);
 
         roleSelectors[0] = RoleSelectors({
-            label: ADMIN_ROLE_LABEL,
+            label: BURNER_ROLE_LABEL,
             role: BURNER_ROLE,
             selectors: getBurnSelectors()
         });
@@ -51,7 +51,7 @@ library Roles {
             selectors: getUpgradeSelectors()
         });
 
-        roleSelectors[2] = RoleSelectors({
+        roleSelectors[3] = RoleSelectors({
             label: ACCOUNTANT_ROLE_LABEL,
             role: ACCOUNTANT_ROLE,
             selectors: getAccountantSelectors()
