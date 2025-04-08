@@ -29,6 +29,7 @@ export class AuctionService implements OnModuleInit {
 
     onModuleInit(): any {
         this.initContractEvents();
+        this.initCommissionEvents();
     }
 
     createAuctionLot(uri: string) {
@@ -128,6 +129,36 @@ export class AuctionService implements OnModuleInit {
 
         return raw.map(
             item => this.mapAuctionArrayToStruct(item)
+        );
+    }
+
+    private initCommissionEvents() {
+        this.auctionContract.on(
+            this.auctionContract.filters.CommissionDebited(),
+            (creditAsset: string, to: string, amount: bigint) => {
+                console.log('CommissionDebited:', creditAsset, to, amount);
+            }
+        );
+
+        this.auctionContract.on(
+            this.auctionContract.filters.CommissionCredited(),
+            (creditAsset: string, amount: bigint) => {
+                console.log('CommissionCredited:', creditAsset, amount);
+            }
+        );
+
+        this.auctionContract.on(
+            this.auctionContract.filters.CommissionTokenAdded(),
+            (token: string) => {
+                console.log('CommissionTokenAdded:', token);
+            }
+        );
+
+        this.auctionContract.on(
+            this.auctionContract.filters.CommissionTokenRemoved(),
+            (token: string) => {
+                console.log('CommissionTokenRemoved:', token);
+            }
         );
     }
 

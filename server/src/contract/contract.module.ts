@@ -1,10 +1,10 @@
 import {Module} from '@nestjs/common';
 import {ContractController} from './contract.controller';
 import {ContractService} from './contract.service';
-import {SignerModule} from "../signer/signer.module";
+import {ChainContractsModule} from "../chain-contracts/chain-contracts.module";
 
 @Module({
-    imports: [SignerModule],
+    imports: [ChainContractsModule],
     controllers: [ContractController],
     providers: [ContractService]
 })

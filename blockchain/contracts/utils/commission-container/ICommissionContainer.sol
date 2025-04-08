@@ -2,6 +2,14 @@
 pragma solidity ^0.8.28;
 
 interface ICommissionContainer {
+
+    struct TokenData {
+        address token;
+        string name;
+        string symbol;
+        uint8 decimals;
+    }
+
     error NoCommissionToDebit(address creditAsset);
     error InvalidCreditAsset(address creditAsset);
     error TokenAlreadyAllowed(address creditAsset);
@@ -22,4 +30,6 @@ interface ICommissionContainer {
     function removeAllowedToken(address creditAsset) external;
 
     function commissionAmount(address creditAsset) external view returns (uint256);
+
+    function getAllowedTokens() external view returns (TokenData[] memory);
 }

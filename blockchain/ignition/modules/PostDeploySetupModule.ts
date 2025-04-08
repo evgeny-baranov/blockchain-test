@@ -1,10 +1,9 @@
 import {buildModule} from "@nomicfoundation/hardhat-ignition/modules";
 import DeployAllModule from "./DeployAllModule";
-import {Roles} from "./roles.type";
 
 export default buildModule("PostDeploySetupModule", (builder) => {
 
-    const {accessManager, auction, accounting, auctionLot, euroToken} = builder.useModule(DeployAllModule);
+    const {accessManager, auction, accounting, auctionLot, euroToken, usdToken} = builder.useModule(DeployAllModule);
 
     const owner = builder.getAccount(0);
 
@@ -16,6 +15,10 @@ export default buildModule("PostDeploySetupModule", (builder) => {
     // initRoleSelectors
     builder.call(accessManagerImplementation, "initRoleSelectors", [euroToken], {
         id: "initRoleSelectorsEuroToken",
+        from: owner,
+    });
+    builder.call(accessManagerImplementation, "initRoleSelectors", [usdToken], {
+        id: "initRoleSelectorsUsdToken",
         from: owner,
     });
     builder.call(accessManagerImplementation, "initRoleSelectors", [auctionLot], {
@@ -44,27 +47,12 @@ export default buildModule("PostDeploySetupModule", (builder) => {
         id: "registerEuroToken",
         from: owner
     });
+    builder.call(accessManagerImplementation, "registerContract", ["UsdToken", usdToken], {
+        id: "registerUsdToken",
+        from: owner
+    });
     builder.call(accessManagerImplementation, "registerContract", ["Accounting", accounting], {
         id: "registerAccounting",
-        from: owner
-    });
-
-    // grantRole auction MINTER_ROLE, ACCOUNTANT_ROLE
-    builder.call(accessManagerImplementation, "grantRole", [
-        Roles.MINTER_ROLE,
-        auction,
-        0
-    ], {
-        id: "MINTER_ROLE",
-        from: owner
-    });
-
-    builder.call(accessManagerImplementation, "grantRole", [
-        Roles.ACCOUNTANT_ROLE,
-        auction,
-        0
-    ], {
-        id: "grantRole_Auction_ACCOUNTANT_ROLE",
         from: owner
     });
 

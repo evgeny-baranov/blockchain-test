@@ -1,30 +1,22 @@
-import {Injectable, NotFoundException, OnModuleInit} from '@nestjs/common';
+import {Injectable, InternalServerErrorException, NotFoundException, OnModuleInit} from '@nestjs/common';
 import {AddressLike, BigNumberish} from "ethers";
+import {AccessManager} from '@blockchain/contracts';
 import {Roles} from '@blockchain/contracts/AccessManager';
-import {ConfigService} from "@nestjs/config";
 import {SignerService} from "../signer/signer.service";
-import assert from "assert";
-import {AccessManager__factory} from '@blockchain/factories/contracts';
+import {ChainContractsService} from "../chain-contracts/chain-contracts.service";
 
 @Injectable()
 export class RoleService implements OnModuleInit {
-    private readonly contractAddress: string;
-    private contract: any;
+    private contract!: AccessManager;
 
     constructor(
-        private readonly configService: ConfigService,
         private readonly signerService: SignerService,
+        private readonly chainContractsService: ChainContractsService
     ) {
-        const contractAddress = this.configService.get<string>('ADDRESS_ACCESS_MANAGER');
-        assert(contractAddress, "ADDRESS_ACCESS_MANAGER not set");
-        this.contractAddress = contractAddress;
     }
 
     onModuleInit(): any {
-        this.contract = AccessManager__factory.connect(
-            this.contractAddress,
-            this.signerService.getSignerWallet()
-        );
+        this.contract = this.chainContractsService.accessManagerContract;
     }
 
     async getRole(code: string | BigNumberish): Promise<Roles.RoleSelectorsStruct> {
@@ -65,7 +57,31 @@ export class RoleService implements OnModuleInit {
     async revokeRole(address: AddressLike, role: BigNumberish | string) {
         const roleObj = await this.getRole(role);
 
-        return await this.contract.revokeRole(roleObj.role, address);
+        try {
+            await this.contract.revokeRole(roleObj.role, address);
+        } catch (error) {
+            let message = ["Revoke role role failed"];
+            if (error instanceof Error) {
+                message.push(error.message);
+            }
+
+            if ((error as any).error?.data) {
+                try {
+                    const decoded = this.contract.interface.parseError((error as any).error.data);
+
+                    if (decoded) {
+                        console.error(decoded);
+                        message.push(decoded.name);
+                    }
+                } catch (decodeError) {
+                    console.error('decodeError', decodeError);
+                }
+            }
+
+            console.error(message);
+
+            throw new InternalServerErrorException(message.join(' '));
+        }
     }
 
     async grantRole(
@@ -75,6 +91,30 @@ export class RoleService implements OnModuleInit {
     ) {
         const roleObj = await this.getRole(role);
 
-        return await this.contract.grantRole(roleObj.role, address, delay);
+        try {
+            await this.contract.grantRole(roleObj.role, address, delay);
+        } catch (error) {
+            let message = ["Grant role role failed"];
+            if (error instanceof Error) {
+                message.push(error.message);
+            }
+
+            if ((error as any).error?.data) {
+                try {
+                    const decoded = this.contract.interface.parseError((error as any).error.data);
+
+                    if (decoded) {
+                        console.error(decoded);
+                        message.push(decoded.name);
+                    }
+                } catch (decodeError) {
+                    console.error('decodeError', decodeError);
+                }
+            }
+
+            console.error(message);
+
+            throw new InternalServerErrorException(message.join(' '));
+        }
     }
 }

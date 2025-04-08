@@ -1,12 +1,6 @@
 # Default value for NETWORK
 NETWORK ?= localhost
 
-#deploy:
-#	npx hardhat run ./deploy/access-manager.deployment.ts --network $(NETWORK)
-#	npx hardhat run ./deploy/euro-token-v1.deployment.ts --network $(NETWORK)
-#	npx hardhat run ./deploy/auction-lot.deployment.ts --network $(NETWORK)
-#	npx hardhat run ./deploy/auction.deployment.ts --network $(NETWORK)
-#	npx hardhat run ./deploy/accounting.deployment.ts --network $(NETWORK)
 testenv:
 	npx hardhat run ./deploy/tests/roles.ts --network $(NETWORK)
 	npx hardhat run ./deploy/tests/mint-euro.ts --network $(NETWORK)

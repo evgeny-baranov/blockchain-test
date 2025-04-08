@@ -1,6 +1,6 @@
 import {Controller, Delete, Get, Param, Put} from '@nestjs/common';
 import {RoleService} from './role.service';
-import {AddressLike, BigNumberish} from "ethers";
+import {AddressLike} from "ethers";
 
 @Controller('role')
 export class RoleController {
@@ -27,9 +27,12 @@ export class RoleController {
     @Put(':address/:role')
     grantRole(
         @Param('address') address: AddressLike,
-        @Param('role') role: BigNumberish,
+        @Param('role') role: string,
     ) {
-        return this.roleService.grantRole(address, role);
+        return this.roleService.grantRole(
+            address,
+            role.toUpperCase()
+        );
     }
 
     @Delete(':address/:role')
@@ -37,6 +40,9 @@ export class RoleController {
         @Param('address') address: AddressLike,
         @Param('role') role: string,
     ) {
-        return this.roleService.revokeRole(address, role);
+        return this.roleService.revokeRole(
+            address,
+            role.toUpperCase()
+        );
     }
 }

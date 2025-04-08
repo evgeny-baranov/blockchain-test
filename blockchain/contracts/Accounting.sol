@@ -1,16 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.28;
 
-import {IAccountingV1} from "./accounting/IAccountingV1.sol";
-import "@openzeppelin/contracts/access/manager/IAccessManaged.sol";
+import {ICommissionManager} from "./accounting/ICommissionManager.sol";
+import {IAccessManaged} from "@openzeppelin/contracts/access/manager/IAccessManaged.sol";
 import {IVersion} from "./utils/version/IVersion.sol";
+import {ICommissionContainer} from "./utils/commission-container/ICommissionContainer.sol";
 
-interface Accounting is IAccountingV1, IAccessManaged {
-    function withdrawContainerCommission(address payable container, address creditAsset, address to) external;
+interface Accounting is ICommissionManager, ICommissionContainer, IAccessManaged, IVersion {
 
-    function updateContainerCommissionPercent(address payable container, uint256 commissionPercent) external;
-
-    function addContainerAllowedToken(address payable container, address creditAsset) external;
-
-    function containerCommissionAmount(address payable container, address creditAsset) external view returns (uint256);
 }

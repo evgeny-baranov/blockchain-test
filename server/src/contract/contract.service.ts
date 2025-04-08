@@ -1,38 +1,27 @@
 import {Injectable, OnModuleInit} from '@nestjs/common';
-import assert from "assert";
-import {AccessManager__factory} from '@blockchain/factories/contracts';
-import {SignerService} from "../signer/signer.service";
 import {AccessManager} from '@blockchain/contracts';
-import {ConfigService} from "@nestjs/config";
 import {AddressLike} from "ethers";
+import {ChainContractsService} from "../chain-contracts/chain-contracts.service";
 
 @Injectable()
 export class ContractService implements OnModuleInit {
-    private contract!: AccessManager;
-    private readonly contractAddress!: string;
+    private accessManager!: AccessManager;
 
     constructor(
-        private readonly configService: ConfigService,
-        private readonly signerService: SignerService,
+        private readonly chainContractsService: ChainContractsService
     ) {
-        const contractAddress = this.configService.get<string>('ADDRESS_ACCESS_MANAGER');
-        assert(contractAddress, "ADDRESS_ACCESS_MANAGER not set");
-        this.contractAddress = contractAddress;
     }
 
     onModuleInit(): any {
-        this.contract = AccessManager__factory.connect(
-            this.contractAddress,
-            this.signerService.getSignerWallet()
-        );
+        this.accessManager = this.chainContractsService.accessManagerContract;
     }
 
     async getContract(name: string): Promise<AddressLike> {
-        return await this.contract.getContract(name)
+        return await this.accessManager.getContract(name)
     }
 
     async registeredContracts() {
-        const [names, addresses] = await this.contract.getRegisteredContracts();
+        const [names, addresses] = await this.accessManager.getRegisteredContracts();
         const contractMap = new Map<string, string>();
 
         names.forEach((name: string, index: number) => {

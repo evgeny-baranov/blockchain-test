@@ -3,21 +3,18 @@ pragma solidity ^0.8.28;
 
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {ICommissionContainer} from "./ICommissionContainer.sol";
+import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import {CommissionContainerStorage} from "./CommissionContainerStorage.sol";
+import {ICommissionContainer} from "./ICommissionContainer.sol";
+import "hardhat/console.sol";
 
 abstract contract CommissionContainer is Initializable, ICommissionContainer {
     using CommissionContainerStorage for CommissionContainerStorage.Layout;
 
-    function __CommissionContainer_init(uint256 _contractCommissionPercent, address[] memory allowedTokens) internal onlyInitializing {
+    function __CommissionContainer_init(uint256 _contractCommissionPercent) internal onlyInitializing {
         CommissionContainerStorage.Layout storage $ = CommissionContainerStorage.layout();
 
         $.contractCommissionPercent = _contractCommissionPercent;
-
-        for (uint256 i = 0; i < allowedTokens.length; i++) {
-            $.allowedTokens[allowedTokens[i]] = true;
-            $.tokenList.push(allowedTokens[i]);
-        }
     }
 
     function _updateCommissionContainer(uint256 _contractCommissionPercent) internal {
@@ -102,7 +99,7 @@ abstract contract CommissionContainer is Initializable, ICommissionContainer {
         // Remove token from the list
         for (uint256 i = 0; i < $.tokenList.length; i++) {
             if ($.tokenList[i] == creditAsset) {
-                $.tokenList[i] = CommissionContainerStorage.layout().tokenList[$.tokenList.length - 1];
+                $.tokenList[i] = $.tokenList[$.tokenList.length - 1];
                 $.tokenList.pop();
                 break;
             }
@@ -115,9 +112,48 @@ abstract contract CommissionContainer is Initializable, ICommissionContainer {
         CommissionContainerStorage.Layout storage $ = CommissionContainerStorage.layout();
 
         if (!$.allowedTokens[creditAsset]) {
-            revert  CreditAssetNotAllowed(creditAsset);
+            revert CreditAssetNotAllowed(creditAsset);
         }
 
         _;
+    }
+
+    function getAllowedTokens() external view returns (TokenData[] memory) {
+        CommissionContainerStorage.Layout storage $ = CommissionContainerStorage.layout();
+
+        TokenData[] memory tokens = new TokenData[]($.tokenList.length);
+
+        for (uint256 i = 0; i < $.tokenList.length; i++) {
+            address token = $.tokenList[i];
+            console.log("getAllowedTokens", token);
+
+            IERC20Metadata meta = IERC20Metadata(token);
+
+            string memory name = "";
+            string memory symbol = "";
+            uint8 decimals = 0;
+
+            // Безопасные вызовы
+            try meta.name() returns (string memory n) {
+                name = n;
+            } catch {}
+
+            try meta.symbol() returns (string memory s) {
+                symbol = s;
+            } catch {}
+
+            try meta.decimals() returns (uint8 d) {
+                decimals = d;
+            } catch {}
+
+            tokens[i] = TokenData({
+                token: token,
+                name: name,
+                symbol: symbol,
+                decimals: decimals
+            });
+        }
+
+        return tokens;
     }
 }

@@ -6,16 +6,16 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20BurnableUpgradeable.sol";
 import {AccessManager} from "../../AccessManager.sol";
 import {ERC20BaseToken} from "../ERC20BaseToken.sol";
-import {EuroToken} from "../../EuroToken.sol";
 import {IERC20BaseToken} from "../IERC20BaseToken.sol";
 import {Roles} from "../../utils/Roles.sol";
+import {UsdToken} from "../../UsdToken.sol";
 
 /// @custom:security-contact info@baranov.eu
-contract EuroTokenV1 is
+contract UsdTokenV1 is
 AccessManagedUpgradeable,
 ERC20BaseToken,
 UUPSUpgradeable,
-EuroToken
+UsdToken
 {
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -24,7 +24,7 @@ EuroToken
 
     function initialize(address initialAuthority) initializer public {
         __AccessManaged_init(initialAuthority);
-        __ERC20BaseToken_init("EuroToken", "EUR");
+        __ERC20BaseToken_init("UsdToken", "USD");
         __UUPSUpgradeable_init();
     }
 

@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
 
-import {IAuctionV1} from "./IAuctionV1.sol";
+import {Auction} from "../Auction.sol";
 
 library AuctionStorage {
 
     struct Layout {
-        mapping(uint256 => IAuctionV1.AuctionPoolData) auctions;
+        mapping(uint256 => Auction.AuctionPoolData) auctions;
         mapping(address => uint256[]) sellerAuctions;
     }
 

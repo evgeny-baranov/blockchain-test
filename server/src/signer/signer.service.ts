@@ -27,8 +27,6 @@ export class SignerService implements OnModuleInit {
             this.signerPrivateKey,
             this.provider
         );
-
-        console.log('onModuleInit wallet.address', this.wallet.address);
     }
 
     getSignerWallet(): Wallet {
