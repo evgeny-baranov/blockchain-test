@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.28;
 
+
 import "@openzeppelin/contracts-upgradeable/access/manager/AccessManagedUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20BurnableUpgradeable.sol";
@@ -9,10 +10,11 @@ import {ERC20BaseToken} from "../ERC20BaseToken.sol";
 import {EuroToken} from "../../EuroToken.sol";
 import {IERC20BaseToken} from "../IERC20BaseToken.sol";
 import {Roles} from "../../utils/Roles.sol";
+import {ViewAccessManagedUpgradeable} from "../../utils/ViewAccessManagedUpgradeable.sol";
 
 /// @custom:security-contact info@baranov.eu
 contract EuroTokenV1 is
-AccessManagedUpgradeable,
+ViewAccessManagedUpgradeable,
 ERC20BaseToken,
 UUPSUpgradeable,
 EuroToken

@@ -11,22 +11,12 @@ export class AccountingService {
         private readonly chainContractsService: ChainContractsService,
         private readonly signerService: SignerService,
     ) {
-
     }
 
-    async getContract(currency: string): Promise<IERC20BaseToken> {
-        switch (currency) {
-            case 'usd':
-                return this.chainContractsService.usdContract;
-            case 'eur':
-                return this.chainContractsService.euroContract;
-            default:
-                throw new Error(`Currency ${currency} is not supported`);
-        }
-    }
     async getBalance(container: AddressLike) {
-        const usd = await this.getContract('usd');
-        const eur = await this.getContract('eur');
+        const usd = await this.chainContractsService.getCurrencyContract('usd');
+        const eur = await this.chainContractsService.getCurrencyContract('eur');
+
         return {
             usd: await usd.balanceOf(container),
             eur: await eur.balanceOf(container),
@@ -34,8 +24,19 @@ export class AccountingService {
         };
     }
 
-    async mintToken(currency: string, to: AddressLike, amount: BigNumberish) {
-        const contract = await this.getContract(currency);
-        return contract.mintTo(to, amount);
+    async mintToken(
+        container: AddressLike,
+        currency: "usd" | "eur",
+        amount: BigNumberish
+    ) {
+        const contract = await this.chainContractsService.getCurrencyContract(currency);
+
+        return contract.mintTo(container, amount);
+    }
+
+    async burnToken(container: AddressLike, currency: "usd" | "eur", amount: BigNumberish) {
+        const contract = await this.chainContractsService.getCurrencyContract(currency);
+
+        return contract.burnFrom(container, amount);
     }
 }

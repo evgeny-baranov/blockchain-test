@@ -43,7 +43,6 @@ abstract contract CommissionContainer is Initializable, ICommissionContainer {
     }
 
     function _collectCommission(address creditAsset, uint256 amount) internal
-    onlyAllowedToken(creditAsset)
     {
         CommissionContainerStorage.Layout storage $ = CommissionContainerStorage.layout();
 
@@ -90,7 +89,6 @@ abstract contract CommissionContainer is Initializable, ICommissionContainer {
     }
 
     function _removeAllowedToken(address creditAsset) internal
-    onlyAllowedToken(creditAsset)
     {
         CommissionContainerStorage.Layout storage $ = CommissionContainerStorage.layout();
 
@@ -113,6 +111,16 @@ abstract contract CommissionContainer is Initializable, ICommissionContainer {
 
         if (!$.allowedTokens[creditAsset]) {
             revert CreditAssetNotAllowed(creditAsset);
+        }
+
+        _;
+    }
+
+    modifier onlyNotAllowedToken(address creditAsset) {
+        CommissionContainerStorage.Layout storage $ = CommissionContainerStorage.layout();
+
+        if ($.allowedTokens[creditAsset]) {
+            revert TokenAlreadyAllowed(creditAsset);
         }
 
         _;

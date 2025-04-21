@@ -111,15 +111,23 @@ library Roles {
     }
 
     function getAccountantSelectors() internal pure returns (bytes4[] memory) {
-        bytes4[9] memory temporary = [
-                            ICommissionManager.withdrawContainerCommission.selector,
-                            ICommissionManager.updateContainerCommissionPercent.selector,
+        bytes4[13] memory temporary = [
                             ICommissionManager.addContainerAllowedToken.selector,
-                            ICommissionManager.removeContainerAllowedToken.selector,
-
-                            ICommissionContainer.withdrawCommission.selector,
-                            ICommissionContainer.updateCommissionPercent.selector,
                             ICommissionContainer.addAllowedToken.selector,
+
+                            ICommissionManager.removeContainerAllowedToken.selector,
+                            ICommissionContainer.removeAllowedToken.selector,
+
+                            ICommissionManager.withdrawContainerCommission.selector,
+                            ICommissionContainer.withdrawCommission.selector,
+
+                            ICommissionManager.updateContainerCommissionPercent.selector,
+                            ICommissionContainer.updateCommissionPercent.selector,
+
+                            ICommissionManager.containerCommissionPercent.selector,
+                            ICommissionContainer.commissionPercent.selector,
+
+                            ICommissionManager.containerCommissionAmount.selector,
                             ICommissionContainer.commissionAmount.selector,
 
                             Auction.withdraw.selector

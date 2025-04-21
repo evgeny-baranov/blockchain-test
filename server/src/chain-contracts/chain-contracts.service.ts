@@ -17,8 +17,9 @@ import {
     AuctionLot,
     EuroToken,
     UsdToken,
-    AccessManager
+    AccessManager,
 } from '@blockchain/contracts';
+import {IERC20BaseToken} from "@blockchain/contracts/tokens";
 
 @Injectable()
 export class ChainContractsService implements OnModuleInit {
@@ -85,7 +86,6 @@ export class ChainContractsService implements OnModuleInit {
     getContractAddress(name: string): string {
         const address = this.addresses[name.toLowerCase()];
         assert(address, `Contract ${name} not found for chain ${this.chainId}`);
-        console.log(`getContractAddress: ${name} => ${address}`);
         return address;
     }
 
@@ -112,5 +112,16 @@ export class ChainContractsService implements OnModuleInit {
             }, {});
 
         console.log(`✅ Loaded proxied contracts for chain ${this.chainId}:`, this.addresses);
+    }
+
+    async getCurrencyContract(currency: string): Promise<IERC20BaseToken> {
+        switch (currency.toLowerCase()) {
+            case 'usd':
+                return this.usdContract;
+            case 'eur':
+                return this.euroContract;
+            default:
+                throw new Error(`Currency ${currency} is not supported`);
+        }
     }
 }

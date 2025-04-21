@@ -16,4 +16,6 @@ interface ICommissionManager {
     function containerAllowedTokens(address container) external view returns (ICommissionContainer.TokenData[] memory);
 
     function containerCommissionAmount(address container, address creditAsset) external view returns (uint256);
+
+    function containerCommissionPercent(address container) external view returns (uint256);
 }

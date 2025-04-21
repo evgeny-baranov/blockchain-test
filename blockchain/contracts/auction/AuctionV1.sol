@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
 
-import "@openzeppelin/contracts-upgradeable/access/manager/AccessManagedUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -16,13 +15,13 @@ import {ICommissionContainer} from "../utils/commission-container/ICommissionCon
 import {IRegistry} from "../utils/access-manager/IRegistry.sol";
 import {Version} from "../utils/version/Version.sol";
 import {Auction} from "../Auction.sol";
-import "hardhat/console.sol";
 import {AuctionStorage} from "./AuctionStorage.sol";
+import {ViewAccessManagedUpgradeable} from "../utils/ViewAccessManagedUpgradeable.sol";
 
 contract AuctionV1 is
 Auction,
 UUPSUpgradeable,
-AccessManagedUpgradeable,
+ViewAccessManagedUpgradeable,
 CommissionContainer,
 Version,
 ERC721Holder,
@@ -201,7 +200,6 @@ ReentrancyGuardUpgradeable
         // Check if the bid amount meets the minimum requirement
         uint256 minimumBid = auction.highestBid + auction.bidIncrement;
         if (bidAmount < minimumBid) {
-            console.log('BidTooLow');
             revert BidTooLow(auctionId, bidAmount, minimumBid);
         }
 
@@ -209,13 +207,11 @@ ReentrancyGuardUpgradeable
         IERC20 creditToken = IERC20(auction.creditAsset);
 
         if (!creditToken.transferFrom(_msgSender(), address(this), bidAmount)) {
-            console.log('BidTransferFailed');
             revert BidTransferFailed(_msgSender(), address(this), bidAmount);
         }
 
         if (auction.highestBidder != address(0)) {
             if (!creditToken.transfer(auction.highestBidder, auction.highestBid)) {
-                console.log('RefundTransferFailed');
                 revert RefundTransferFailed(auction.highestBidder, auction.highestBid);
             }
         }
@@ -305,7 +301,6 @@ ReentrancyGuardUpgradeable
         AuctionPoolData storage auction = $.auctions[auctionId];
 
         if (auction.closeTime <= Time.timestamp()) {
-            console.log('isAuctionNotClosed', auction.closeTime, Time.timestamp());
             revert AuctionClosed(auctionId, auction.closeTime, Time.timestamp());
         }
 
@@ -341,26 +336,36 @@ ReentrancyGuardUpgradeable
         _;
     }
 
-    function withdrawCommission(address creditAsset, address to) external restricted {
+    function withdrawCommission(address creditAsset, address to) external
+    restricted
+    {
         _withdrawCommission(creditAsset, to);
     }
 
     function addAllowedToken(address creditAsset) external
     restricted
+    onlyNotAllowedToken(creditAsset)
     {
         _addAllowedToken(creditAsset);
     }
 
     function removeAllowedToken(address creditAsset) external
     restricted
+    onlyAllowedToken(creditAsset)
     {
         _removeAllowedToken(creditAsset);
     }
 
     function commissionAmount(address creditAsset) external view
+    restrictedView
     returns (uint256) {
-        uint256 amount = _commissionAmount(creditAsset);
-        return amount;
+        return _commissionAmount(creditAsset);
+    }
+
+    function commissionPercent() external view
+    restrictedView
+    returns (uint256) {
+        return _commissionPercent();
     }
 
     function updateCommissionPercent(uint256 commissionPercent) external

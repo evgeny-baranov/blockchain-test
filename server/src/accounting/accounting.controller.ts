@@ -1,4 +1,4 @@
-import {Body, Controller, Get, Param, Put} from '@nestjs/common';
+import {Body, Controller, Copy, Delete, Get, Param, Put} from '@nestjs/common';
 import {AccountingService} from './accounting.service';
 import {AddressLike, BigNumberish} from "ethers";
 
@@ -9,19 +9,36 @@ export class AccountingController {
     ) {
     }
 
-    @Get(':container/balance')
+    @Get(':container')
     getBalance(
         @Param('container') container: AddressLike,
     ) {
         return this.accountingService.getBalance(container);
     }
 
-    @Put(':currency/mint/')
+    @Put(':container/:currency/:amount')
     mintToken(
-        @Param('currency') token: 'usd' | 'eur',
-        @Body('to') to: AddressLike,
-        @Body('amount') amount: BigNumberish,
+        @Param('currency') currency: 'usd' | 'eur',
+        @Param('container') container: AddressLike,
+        @Param('amount') amount: BigNumberish,
     ) {
-        return this.accountingService.mintToken(token, to, amount);
+        return this.accountingService.mintToken(
+            container,
+            currency,
+            amount
+        );
+    }
+
+    @Delete(':container/:currency/:amount')
+    burnToken(
+        @Param('currency') currency: 'usd' | 'eur',
+        @Param('container') container: AddressLike,
+        @Param('amount') amount: BigNumberish,
+    ) {
+        return this.accountingService.burnToken(
+            container,
+            currency,
+            amount
+        );
     }
 }

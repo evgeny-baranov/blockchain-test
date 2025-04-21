@@ -1,4 +1,4 @@
-import {Body, Controller, Delete, Get, Param, Put} from '@nestjs/common';
+import {Body, Controller, Copy, Delete, Get, Param, Put} from '@nestjs/common';
 import {CommissionService} from './commission.service';
 import {AddressLike} from "ethers";
 
@@ -8,33 +8,40 @@ export class CommissionController {
     }
 
 
-    @Delete(":creditAsset/:to")
+    @Copy(":currency/:to")
     withdrawCommission(
-        @Param('container') container: AddressLike,
+        @Param('container') container: string,
         @Param('to') to: AddressLike,
-        @Param("creditAsset") creditAsset: AddressLike
+        @Param("currency") currency: string
     ) {
-        this.commissionService.withdrawCommission(
+        return this.commissionService.withdrawCommission(
             container,
-            creditAsset,
+            currency,
             to,
         )
     }
 
-    @Get(':creditAsset')
+    @Get(':currency')
     getCommission(
-        @Param('container') container: AddressLike,
-        @Param('creditAsset') creditAsset: AddressLike
+        @Param('container') container: string,
+        @Param("currency") currency: string
     ) {
-        this.commissionService.getCommission(container, creditAsset)
+        return this.commissionService.getCommission(container, currency)
     }
 
-    @Put()
-    updateCommissionPercent(
-        @Param('container') container: AddressLike,
-        @Body("commissionPercent") commissionPercent: number
+    @Get()
+    getCommissionPercent(
+        @Param('container') container: string,
     ) {
-        this.commissionService.updateCommissionPercent(
+        return this.commissionService.getCommissionPercent(container)
+    }
+
+    @Put(":commissionPercent")
+    updateCommissionPercent(
+        @Param('container') container: string,
+        @Param("commissionPercent") commissionPercent: number
+    ) {
+        return this.commissionService.updateCommissionPercent(
             container,
             commissionPercent
         )
