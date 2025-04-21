@@ -1,4 +1,4 @@
-import {Body, Controller, Get, Param, Post} from '@nestjs/common';
+import {Body, Controller, Get, Param, Post, Put} from '@nestjs/common';
 import {AuctionService} from "./auction.service";
 import {StartAuctionDto} from "../dto/start-auction.dto";
 
@@ -27,6 +27,23 @@ export class AuctionController {
     @Get('lot/:id')
     async getAuctionLotById(@Param('id') id: string) {
         return this.auctionService.getTokenInfo(id);
+    }
+
+    @Get('my')
+    async getAuctions() {
+        return this.auctionService.getMyAuctions();
+    }
+
+    @Put(':auctionId/bid')
+    async placeBid(
+        @Param('auctionId') auctionId: string,
+        @Body() body: {
+            amount: string
+        }) {
+        return this.auctionService.placeBid(
+            auctionId,
+            BigInt(body.amount)
+        );
     }
 
     @Post()

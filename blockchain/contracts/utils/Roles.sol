@@ -4,18 +4,26 @@ pragma solidity ^0.8.28;
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20BurnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721BurnableUpgradeable.sol";
-import {Accounting} from "../Accounting.sol";
 import {AuctionLot} from "../AuctionLot.sol";
 import {EuroToken} from "../EuroToken.sol";
+import {IERC20BaseToken} from "../tokens/IERC20BaseToken.sol";
 import {ICommissionContainer} from "../utils/commission-container/ICommissionContainer.sol";
 import {IRegistry} from "./access-manager/IRegistry.sol";
-import {IAuctionV1} from "../auction/IAuctionV1.sol";
+import {Auction} from "../Auction.sol";
+import {ICommissionManager} from "../accounting/ICommissionManager.sol";
 
 library Roles {
     struct RoleSelectors {
+        string label;
         uint64 role;
         bytes4[] selectors;
     }
+
+    string public constant ADMIN_ROLE_LABEL = "ADMIN";
+    string public constant UPGRADE_ROLE_LABEL = "UPGRADE";
+    string public constant MINTER_ROLE_LABEL = "MINTER";
+    string public constant BURNER_ROLE_LABEL = "BURNER";
+    string public constant ACCOUNTANT_ROLE_LABEL = "ACCOUNTANT";
 
     uint64 public constant ADMIN_ROLE = 0;
     uint64 public constant UPGRADE_ROLE = 1;
@@ -24,66 +32,112 @@ library Roles {
     uint64 public constant ACCOUNTANT_ROLE = 4;
 
     function getRolesWithSelectors() internal pure returns (RoleSelectors[] memory) {
-        RoleSelectors[] memory roleSelectors = new RoleSelectors[](4);
+        RoleSelectors[] memory roleSelectors = new RoleSelectors[](5);
 
         roleSelectors[0] = RoleSelectors({
+            label: BURNER_ROLE_LABEL,
             role: BURNER_ROLE,
             selectors: getBurnSelectors()
         });
 
         roleSelectors[1] = RoleSelectors({
+            label: MINTER_ROLE_LABEL,
             role: MINTER_ROLE,
             selectors: getMintSelectors()
         });
 
         roleSelectors[2] = RoleSelectors({
+            label: UPGRADE_ROLE_LABEL,
             role: UPGRADE_ROLE,
             selectors: getUpgradeSelectors()
         });
 
-        roleSelectors[2] = RoleSelectors({
+        roleSelectors[3] = RoleSelectors({
+            label: ACCOUNTANT_ROLE_LABEL,
             role: ACCOUNTANT_ROLE,
             selectors: getAccountantSelectors()
+        });
+
+        roleSelectors[4] = RoleSelectors({
+            label: ADMIN_ROLE_LABEL,
+            role: ADMIN_ROLE,
+            selectors: new bytes4[](0)
         });
 
         return roleSelectors;
     }
 
     function getBurnSelectors() internal pure returns (bytes4[] memory) {
-        bytes4[] memory selectors = new bytes4[](3);
-        selectors[0] = ERC721BurnableUpgradeable.burn.selector;
-        selectors[1] = ERC20BurnableUpgradeable.burn.selector;
-        selectors[2] = ERC20BurnableUpgradeable.burnFrom.selector;
+        bytes4[3] memory temporary = [
+                            ERC721BurnableUpgradeable.burn.selector,
+                            ERC20BurnableUpgradeable.burn.selector,
+                            ERC20BurnableUpgradeable.burnFrom.selector
+            ];
+
+        bytes4[] memory selectors = new bytes4[](temporary.length);
+        for (uint i = 0; i < temporary.length; i++) {
+            selectors[i] = temporary[i];
+        }
+
         return selectors;
     }
 
     function getMintSelectors() internal pure returns (bytes4[] memory) {
-        bytes4[] memory selectors = new bytes4[](2);
-        selectors[0] = AuctionLot.mint.selector;
-        selectors[1] = EuroToken.mint.selector;
+        bytes4[2] memory temporary = [
+                            IERC20BaseToken.mint.selector,
+                            IERC20BaseToken.mintTo.selector
+            ];
+
+        bytes4[] memory selectors = new bytes4[](temporary.length);
+        for (uint i = 0; i < temporary.length; i++) {
+            selectors[i] = temporary[i];
+        }
+
         return selectors;
     }
 
     function getUpgradeSelectors() internal pure returns (bytes4[] memory) {
-        bytes4[] memory selectors = new bytes4[](2);
-        selectors[0] = UUPSUpgradeable.upgradeToAndCall.selector;
-        selectors[1] = IRegistry.registerContract.selector;
+        bytes4[2] memory temporary = [
+                            UUPSUpgradeable.upgradeToAndCall.selector,
+                            IRegistry.registerContract.selector
+            ];
+
+        bytes4[] memory selectors = new bytes4[](temporary.length);
+        for (uint i = 0; i < temporary.length; i++) {
+            selectors[i] = temporary[i];
+        }
+
         return selectors;
     }
 
     function getAccountantSelectors() internal pure returns (bytes4[] memory) {
-        bytes4[] memory selectors = new bytes4[](9);
-        selectors[0] = Accounting.withdrawContainerCommission.selector;
-        selectors[1] = Accounting.updateContainerCommissionPercent.selector;
-        selectors[2] = Accounting.addContainerAllowedToken.selector;
-        selectors[3] = Accounting.containerCommissionAmount.selector;
+        bytes4[13] memory temporary = [
+                            ICommissionManager.addContainerAllowedToken.selector,
+                            ICommissionContainer.addAllowedToken.selector,
 
-        selectors[4] = ICommissionContainer.withdrawCommission.selector;
-        selectors[5] = ICommissionContainer.updateCommissionPercent.selector;
-        selectors[6] = ICommissionContainer.addAllowedToken.selector;
-        selectors[7] = ICommissionContainer.commissionAmount.selector;
+                            ICommissionManager.removeContainerAllowedToken.selector,
+                            ICommissionContainer.removeAllowedToken.selector,
 
-        selectors[8] = IAuctionV1.withdraw.selector;
+                            ICommissionManager.withdrawContainerCommission.selector,
+                            ICommissionContainer.withdrawCommission.selector,
+
+                            ICommissionManager.updateContainerCommissionPercent.selector,
+                            ICommissionContainer.updateCommissionPercent.selector,
+
+                            ICommissionManager.containerCommissionPercent.selector,
+                            ICommissionContainer.commissionPercent.selector,
+
+                            ICommissionManager.containerCommissionAmount.selector,
+                            ICommissionContainer.commissionAmount.selector,
+
+                            Auction.withdraw.selector
+            ];
+
+        bytes4[] memory selectors = new bytes4[](temporary.length);
+        for (uint i = 0; i < temporary.length; i++) {
+            selectors[i] = temporary[i];
+        }
+
         return selectors;
     }
 }

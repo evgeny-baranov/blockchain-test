@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
 
-import "@openzeppelin/contracts-upgradeable/access/manager/AccessManagedUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -15,21 +14,21 @@ import {CommissionContainer} from "../utils/commission-container/CommissionConta
 import {ICommissionContainer} from "../utils/commission-container/ICommissionContainer.sol";
 import {IRegistry} from "../utils/access-manager/IRegistry.sol";
 import {Version} from "../utils/version/Version.sol";
-import {IAuctionV1} from "./IAuctionV1.sol";
+import {Auction} from "../Auction.sol";
+import {AuctionStorage} from "./AuctionStorage.sol";
+import {ViewAccessManagedUpgradeable} from "../utils/ViewAccessManagedUpgradeable.sol";
 
 contract AuctionV1 is
-IAuctionV1,
+Auction,
 UUPSUpgradeable,
-AccessManagedUpgradeable,
+ViewAccessManagedUpgradeable,
 CommissionContainer,
 Version,
 ERC721Holder,
 ReentrancyGuardUpgradeable
 {
     using Time for *;
-
-    mapping(uint256 => AuctionPoolData) public auctions;
-    mapping(address => uint256[]) public sellerAuctions;
+    using AuctionStorage for AuctionStorage.Layout;
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -39,24 +38,11 @@ ReentrancyGuardUpgradeable
     function initialize(address initialAuthority) initializer public {
         __UUPSUpgradeable_init();
         __AccessManaged_init(initialAuthority);
-
-        address[] memory tokens = new address[](1);
-        tokens[0] = _getEuroTokenAddress();
-        __CommissionContainer_init(10, tokens);
-
+        __CommissionContainer_init(10);
         __ReentrancyGuard_init();
     }
 
     function _authorizeUpgrade(address newImplementation) internal restricted override {
-
-    }
-
-    function _getEuroTokenAddress() internal view returns (address) {
-        return IRegistry(
-            authority()
-        ).getContract(
-            "EuroToken"
-        );
     }
 
     function _getAuctionLotAddress() internal view returns (address) {
@@ -68,7 +54,6 @@ ReentrancyGuardUpgradeable
     }
 
     function createAuctionLot(string memory uri) external nonReentrant returns (uint256) {
-
         AuctionLot lotContract = AuctionLot(_getAuctionLotAddress());
 
         uint256 id = lotContract.mint(_msgSender(), uri);
@@ -81,7 +66,7 @@ ReentrancyGuardUpgradeable
         address from,
         uint256 tokenId,
         bytes memory data
-    ) public virtual override returns (bytes4) {
+    ) public virtual override(ERC721Holder, IERC721Receiver) returns (bytes4) {
         if (msg.sender != _getAuctionLotAddress()) {
             revert InvalidSender(msg.sender, _getAuctionLotAddress());
         }
@@ -127,8 +112,10 @@ ReentrancyGuardUpgradeable
 
         uint256 auctionId = getAuctionId(debitAssetAddress, tokenId);
 
-        auctions[auctionId] = poolData;
-        sellerAuctions[from].push(auctionId);
+        AuctionStorage.Layout storage $ = AuctionStorage.layout();
+
+        $.auctions[auctionId] = poolData;
+        $.sellerAuctions[from].push(auctionId);
 
         emit AuctionCreated(auctionId, from);
     }
@@ -151,17 +138,19 @@ ReentrancyGuardUpgradeable
     internal isAuctionExist(auctionId)
     returns (AuctionPoolData storage)
     {
-        return auctions[auctionId];
+        AuctionStorage.Layout storage $ = AuctionStorage.layout();
+        return $.auctions[auctionId];
     }
 
     function getAuctionsBySeller(address seller) external view returns (AuctionPoolData[] memory) {
-        uint256[] memory auctionIds = sellerAuctions[seller];
+        AuctionStorage.Layout storage $ = AuctionStorage.layout();
+        uint256[] memory auctionIds = $.sellerAuctions[seller];
         uint256 count = auctionIds.length;
 
         AuctionPoolData[] memory result = new AuctionPoolData[](count);
 
         for (uint256 i = 0; i < count; i++) {
-            result[i] = auctions[auctionIds[i]];
+            result[i] = $.auctions[auctionIds[i]];
         }
 
         return result;
@@ -242,11 +231,6 @@ ReentrancyGuardUpgradeable
         _placeBid(auctionId, bidAmount);
     }
 
-    function placeBid(address debitAssetAddress, uint256 tokenId, uint256 bidAmount) external nonReentrant {
-        uint256 auctionId = getAuctionId(debitAssetAddress, tokenId);
-        _placeBid(auctionId, bidAmount);
-    }
-
     function finaliseAuction(uint256 auctionId) external restricted
     isAuctionClaimReady(auctionId)
     isAuctionNotClaimed(auctionId)
@@ -303,14 +287,18 @@ ReentrancyGuardUpgradeable
     }
 
     modifier isAuctionExist(uint256 auctionId) {
-        if (auctions[auctionId].seller == address(0)) {
+        AuctionStorage.Layout storage $ = AuctionStorage.layout();
+
+        if ($.auctions[auctionId].seller == address(0)) {
             revert AuctionDoesNotExist(auctionId);
         }
+
         _;
     }
 
     modifier isAuctionNotClosed(uint256 auctionId) {
-        AuctionPoolData storage auction = auctions[auctionId];
+        AuctionStorage.Layout storage $ = AuctionStorage.layout();
+        AuctionPoolData storage auction = $.auctions[auctionId];
 
         if (auction.closeTime <= Time.timestamp()) {
             revert AuctionClosed(auctionId, auction.closeTime, Time.timestamp());
@@ -320,14 +308,17 @@ ReentrancyGuardUpgradeable
     }
 
     modifier isAuctionNotClaimed(uint256 auctionId) {
-        if (auctions[auctionId].claimed) {
+        AuctionStorage.Layout storage $ = AuctionStorage.layout();
+
+        if ($.auctions[auctionId].claimed) {
             revert AuctionAlreadyClaimed(auctionId);
         }
         _;
     }
 
     modifier isAuctionClaimReady(uint256 auctionId) {
-        AuctionPoolData storage auction = auctions[auctionId];
+        AuctionStorage.Layout storage $ = AuctionStorage.layout();
+        AuctionPoolData storage auction = $.auctions[auctionId];
 
         if (auction.closeTime > Time.timestamp()) {
             revert AuctionNotClosed(auctionId, auction.closeTime, Time.timestamp());
@@ -345,20 +336,36 @@ ReentrancyGuardUpgradeable
         _;
     }
 
-    function withdrawCommission(address creditAsset, address to) external restricted {
+    function withdrawCommission(address creditAsset, address to) external
+    restricted
+    {
         _withdrawCommission(creditAsset, to);
     }
 
     function addAllowedToken(address creditAsset) external
     restricted
+    onlyNotAllowedToken(creditAsset)
     {
         _addAllowedToken(creditAsset);
     }
 
+    function removeAllowedToken(address creditAsset) external
+    restricted
+    onlyAllowedToken(creditAsset)
+    {
+        _removeAllowedToken(creditAsset);
+    }
+
     function commissionAmount(address creditAsset) external view
+    restrictedView
     returns (uint256) {
-        uint256 amount = _commissionAmount(creditAsset);
-        return amount;
+        return _commissionAmount(creditAsset);
+    }
+
+    function commissionPercent() external view
+    restrictedView
+    returns (uint256) {
+        return _commissionPercent();
     }
 
     function updateCommissionPercent(uint256 commissionPercent) external

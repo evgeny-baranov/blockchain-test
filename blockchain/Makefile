@@ -1,14 +1,8 @@
 # Default value for NETWORK
 NETWORK ?= localhost
 
-deploy:
-	npx hardhat run ./deploy/access-manager.deployment.ts --network $(NETWORK)
-	npx hardhat run ./deploy/euro-token-v1.deployment.ts --network $(NETWORK)
-	npx hardhat run ./deploy/auction-lot.deployment.ts --network $(NETWORK)
-	npx hardhat run ./deploy/auction.deployment.ts --network $(NETWORK)
-	npx hardhat run ./deploy/accounting.deployment.ts --network $(NETWORK)
 testenv:
-	npx hardhat run ./deploy/tests/test-user-roles.deployment.ts --network $(NETWORK)
+	npx hardhat run ./deploy/tests/roles.ts --network $(NETWORK)
 	npx hardhat run ./deploy/tests/mint-euro.ts --network $(NETWORK)
 	npx hardhat run ./deploy/tests/auction-create.ts --network $(NETWORK)
 install:
@@ -20,11 +14,12 @@ node:
 	npx hardhat node
 compile:
 	npx hardhat compile
-	npm run build
 test:
 	REPORT_GAS=true npx hardhat test
 ignition:
 	npx hardhat ignition deploy ./ignition/modules/DeployAllModule.ts --network localhost
 	npx hardhat ignition deploy ./ignition/modules/PostDeploySetupModule.ts --network localhost
+build:
+	npm run build
 
-.PHONY: deploy install clean node compile test ignition
+.PHONY: install clean node compile test ignition build

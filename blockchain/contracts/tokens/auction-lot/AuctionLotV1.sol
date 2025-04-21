@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.28;
 
-import "@openzeppelin/contracts-upgradeable/access/manager/AccessManagedUpgradeable.sol";
+import "../../utils/ViewAccessManagedUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol";
@@ -12,9 +12,9 @@ import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721URISto
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Burnable.sol";
 import "@openzeppelin/contracts/utils/introspection/ERC165.sol";
 import "hardhat/console.sol";
+import {AccessManager} from "../../AccessManager.sol";
 import {IAuctionLotV1} from "./IAuctionLotV1.sol";
 import {Version} from "../../utils/version/Version.sol";
-import {AccessManager} from "../../AccessManager.sol";
 
 /// @custom:security-contact info@baranov.eu
 contract AuctionLotV1 is
@@ -24,7 +24,7 @@ ERC721Upgradeable,
 ERC721EnumerableUpgradeable,
 ERC721URIStorageUpgradeable,
 ERC721PausableUpgradeable,
-AccessManagedUpgradeable,
+ViewAccessManagedUpgradeable,
 ERC721BurnableUpgradeable,
 UUPSUpgradeable
 {

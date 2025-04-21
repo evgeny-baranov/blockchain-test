@@ -10,11 +10,14 @@ import {Observable, map} from 'rxjs';
 export class BigIntSerializerInterceptor implements NestInterceptor {
     intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
         return next.handle().pipe(
-            map((data) => JSON.parse(JSON.stringify(data, this.bigIntReplacer))),
+            map((data) => {
+                if (data === undefined) return undefined;
+                return JSON.parse(JSON.stringify(data, this.bigIntReplacer));
+            }),
         );
     }
 
-    private bigIntReplacer(key: string, value: any): any {
+    private bigIntReplacer(key: string , value: any): any {
         return typeof value === 'bigint' ? value.toString() : value;
     }
 }

@@ -1,11 +1,16 @@
 import {Injectable, OnModuleInit} from '@nestjs/common';
-import {ethers, SigningKey, Wallet, WebSocketProvider} from "ethers";
+import {AddressLike, ethers, SigningKey, Wallet, WebSocketProvider} from "ethers";
 import assert from 'assert';
 
 @Injectable()
 export class SignerService implements OnModuleInit {
     private provider!: WebSocketProvider;
     private signerPrivateKey!: SigningKey;
+    private wallet!: Wallet;
+
+    get publicAddress(): AddressLike {
+        return this.wallet.address;
+    }
 
     onModuleInit(): void {
         const privateKey = process.env.SIGNER_PRIVATE_KEY;
@@ -17,12 +22,14 @@ export class SignerService implements OnModuleInit {
         this.provider = new WebSocketProvider(rpcUrl);
 
         this.signerPrivateKey = new SigningKey(privateKey);
-    }
 
-    getSignerWallet(): Wallet {
-        return new ethers.Wallet(
+        this.wallet = new ethers.Wallet(
             this.signerPrivateKey,
             this.provider
         );
+    }
+
+    getSignerWallet(): Wallet {
+        return this.wallet;
     }
 }
