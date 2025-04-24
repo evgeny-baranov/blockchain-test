@@ -92,27 +92,32 @@ ReentrancyGuardUpgradeable
     ) internal {
         address debitAssetAddress = _getAuctionLotAddress();
         uint48 startTime = auctionData.startTime > 0 ? auctionData.startTime : Time.timestamp();
-
-        AuctionPoolData memory poolData = AuctionPoolData(
-            from,
-            debitAssetAddress,
-            tokenId,
-            1,
-            auctionData.creditAsset,
-            auctionData.creditStartAmount,
-            auctionData.creditEndAmount,
-            address(0),
-            0,
-            auctionData.bidIncrement,
-            startTime,
-            startTime + auctionData.duration,
-            auctionData.claimDelay,
-            false
-        );
-
-        uint256 auctionId = getAuctionId(debitAssetAddress, tokenId);
-
         AuctionStorage.Layout storage $ = AuctionStorage.layout();
+
+        uint256 auctionId = $.auctionCount++;
+
+        AuctionPoolData memory poolData = AuctionPoolData({
+            auctionId: auctionId,
+            seller: from,
+
+            debitAsset: debitAssetAddress,
+            debitAssetId: tokenId,
+            debitAmount: 1,
+
+            creditAsset: auctionData.creditAsset,
+            creditStartAmount: auctionData.creditStartAmount,
+            creditEndAmount: auctionData.creditEndAmount,
+
+            highestBidder: address(0),
+            highestBid: 0,
+
+            bidIncrement: auctionData.bidIncrement,
+            startTime: startTime,
+            closeTime: startTime + auctionData.duration,
+
+            claimDelay: auctionData.claimDelay,
+            claimed: false
+        });
 
         $.auctions[auctionId] = poolData;
         $.sellerAuctions[from].push(auctionId);
@@ -128,16 +133,7 @@ ReentrancyGuardUpgradeable
 
     }
 
-    function getAuctionId(address debitAssetAddress, uint256 tokenId) public pure returns (uint256) {
-        return uint256(
-            keccak256(abi.encodePacked(debitAssetAddress, tokenId))
-        );
-    }
-
-    function _getAuction(uint256 auctionId)
-    internal isAuctionExist(auctionId)
-    returns (AuctionPoolData storage)
-    {
+    function getAuction(uint256 auctionId) external view returns (AuctionPoolData memory) {
         AuctionStorage.Layout storage $ = AuctionStorage.layout();
         return $.auctions[auctionId];
     }
@@ -192,40 +188,51 @@ ReentrancyGuardUpgradeable
         );
     }
 
-    mapping(uint256 => Bid[]) public auctionBids;
+    function _placeBid(uint256 auctionId, uint256 bidAmount)
+    isAuctionNotClosed(auctionId)
+    isAuctionNotClaimed(auctionId)
+    internal
+    {
+        AuctionStorage.Layout storage $ = AuctionStorage.layout();
+        AuctionPoolData storage auction = $.auctions[auctionId];
 
-    function _placeBid(uint256 auctionId, uint256 bidAmount) isAuctionNotClosed(auctionId) internal {
-        AuctionPoolData storage auction = _getAuction(auctionId);
+        Bid storage currentBid = $.bidsByAuction[auctionId][_msgSender()];
+        uint256 previousAmount = currentBid.amount;
 
-        // Check if the bid amount meets the minimum requirement
-        uint256 minimumBid = auction.highestBid + auction.bidIncrement;
+        uint256 minimumBid = auction.creditStartAmount;
+        if (auction.highestBid > 0) {
+            minimumBid = auction.highestBid + auction.bidIncrement;
+        }
+
         if (bidAmount < minimumBid) {
             revert BidTooLow(auctionId, bidAmount, minimumBid);
         }
 
-        // Check if the transfer of tokens succeeds
-        IERC20 creditToken = IERC20(auction.creditAsset);
-
-        if (!creditToken.transferFrom(_msgSender(), address(this), bidAmount)) {
-            revert BidTransferFailed(_msgSender(), address(this), bidAmount);
-        }
-
-        if (auction.highestBidder != address(0)) {
-            if (!creditToken.transfer(auction.highestBidder, auction.highestBid)) {
-                revert RefundTransferFailed(auction.highestBidder, auction.highestBid);
+        uint256 delta = bidAmount - previousAmount;
+        if (delta > 0) {
+            IERC20 creditToken = IERC20(auction.creditAsset);
+            if (!creditToken.transferFrom(_msgSender(), address(this), delta)) {
+                revert BidTransferFailed(_msgSender(), address(this), delta);
             }
         }
 
+        if (previousAmount == 0) {
+            $.biddersList[auctionId].push(_msgSender());
+        }
+
+        currentBid.amount = bidAmount;
+        currentBid.timestamp = uint48(block.timestamp);
         auction.highestBid = bidAmount;
         auction.highestBidder = _msgSender();
 
         emit AuctionBid(auctionId, _msgSender(), bidAmount);
 
         if (auction.creditEndAmount > 0 && bidAmount >= auction.creditEndAmount) {
-            auction.closeTime = Time.timestamp();
+            auction.closeTime = uint48(block.timestamp);
             emit AuctionClose(auctionId, _msgSender(), bidAmount);
         }
     }
+
 
     function placeBid(uint256 auctionId, uint256 bidAmount) external nonReentrant {
         _placeBid(auctionId, bidAmount);
@@ -233,55 +240,75 @@ ReentrancyGuardUpgradeable
 
     function finaliseAuction(uint256 auctionId) external restricted
     isAuctionClaimReady(auctionId)
-    isAuctionNotClaimed(auctionId)
     {
-        AuctionPoolData storage auction = _getAuction(auctionId);
+        AuctionStorage.Layout storage $ = AuctionStorage.layout();
+        AuctionPoolData storage auction = $.auctions[auctionId];
 
-        // Mark as claimed
-        auction.claimed = true;
-
-        // Transfer the funds to the seller
         IERC20 creditToken = IERC20(auction.creditAsset);
+        IERC721 auctionLot = IERC721(auction.debitAsset);
 
-        uint256 commission = (auction.highestBid * _commissionPercent()) / 100;
-        uint256 amount = auction.highestBid - commission;
+        address winner = auction.highestBidder;
+        uint256 winningAmount = auction.highestBid;
 
-        _collectCommission(
-            auction.creditAsset,
-            commission
-        );
-
-        if (!creditToken.transfer(auction.seller, amount)) {
-            revert FeeTransferFailed(auction.seller, amount);
+        if (winner == address(0) || winningAmount == 0) {
+            revert NoBidsPlaced(auctionId);
         }
 
-        // Transfer asset back to the highest bidder
-        IERC721 auctionLot = IERC721(auction.debitAsset);
-        auctionLot.safeTransferFrom(address(this), auction.highestBidder, auction.debitAssetId);
+        uint256 commission = (winningAmount * _commissionPercent()) / 100;
+        uint256 amountForSeller = winningAmount - commission;
 
-        emit AuctionClaimed(auctionId, auction.seller, amount, commission);
+        _collectCommission(auction.creditAsset, commission);
+
+        if (!creditToken.transfer(auction.seller, amountForSeller)) {
+            revert FeeTransferFailed(auction.seller, amountForSeller);
+        }
+
+        auctionLot.safeTransferFrom(address(this), winner, auction.debitAssetId);
+
+        address[] storage bidders = $.biddersList[auctionId];
+        for (uint256 i = 0; i < bidders.length; i++) {
+            address bidder = bidders[i];
+            if (bidder != winner) {
+                uint256 refund = $.bidsByAuction[auctionId][bidder].amount;
+                if (refund > 0) {
+                    if (!creditToken.transfer(bidder, refund)) {
+                        revert RefundTransferFailed(bidder, refund);
+                    }
+                    $.bidsByAuction[auctionId][bidder].amount = 0;
+                }
+            }
+        }
+
+        auction.claimed = true;
+        emit AuctionClaimed(auctionId, auction.seller, amountForSeller, commission);
     }
 
     function cancelAuction(uint256 auctionId) external restricted
     isAuctionNotClaimed(auctionId)
     {
-        AuctionPoolData storage auction = _getAuction(auctionId);
+        AuctionStorage.Layout storage $ = AuctionStorage.layout();
+        AuctionPoolData storage auction = $.auctions[auctionId];
 
-        // Refund the highest bidder if a bid exists
-        if (auction.highestBid > 0) {
-            IERC20 creditToken = IERC20(auction.creditAsset);
+        IERC20 creditToken = IERC20(auction.creditAsset);
+        IERC721 auctionLot = IERC721(auction.debitAsset);
 
-            if (!creditToken.transfer(auction.highestBidder, auction.highestBid)) {
-                revert RefundTransferFailed(auction.highestBidder, auction.highestBid);
+        address[] storage bidders = $.biddersList[auctionId];
+        for (uint256 i = 0; i < bidders.length; i++) {
+            address bidder = bidders[i];
+            uint256 refund = $.bidsByAuction[auctionId][bidder].amount;
+
+            if (refund > 0) {
+                if (!creditToken.transfer(bidder, refund)) {
+                    revert RefundTransferFailed(bidder, refund);
+                }
+                $.bidsByAuction[auctionId][bidder].amount = 0;
             }
         }
 
-        // Return the auctioned item to the seller
-        IERC721 auctionLot = IERC721(auction.debitAsset);
         auctionLot.safeTransferFrom(address(this), auction.seller, auction.debitAssetId);
 
-        // Mark the auction as claimed (to prevent further interaction)
         auction.claimed = true;
+        auction.closeTime = Time.timestamp();
 
         emit AuctionCancelled(auctionId, auction.seller);
     }
@@ -294,6 +321,17 @@ ReentrancyGuardUpgradeable
         }
 
         _;
+    }
+
+    function getWinningBid(uint256 auctionId) external view returns (Bid memory winnerBid) {
+        AuctionStorage.Layout storage $ = AuctionStorage.layout();
+        AuctionPoolData storage auction = $.auctions[auctionId];
+
+        if (auction.highestBidder == address(0)) {
+            revert NoBidsPlaced(auctionId);
+        }
+
+        winnerBid = $.bidsByAuction[auctionId][auction.highestBidder];
     }
 
     modifier isAuctionNotClosed(uint256 auctionId) {
@@ -362,7 +400,7 @@ ReentrancyGuardUpgradeable
         return _commissionAmount(creditAsset);
     }
 
-    function commissionPercent() external view
+    function getCommissionPercent() external view
     restrictedView
     returns (uint256) {
         return _commissionPercent();

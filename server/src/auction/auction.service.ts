@@ -1,9 +1,8 @@
 import {Injectable, NotFoundException, OnModuleInit} from '@nestjs/common';
 import {AddressLike} from "ethers";
 import {Auction, AuctionLot, EuroToken} from '@blockchain/contracts';
-import {IAuctionV1} from '@blockchain/contracts/auction/IAuctionV1';
 import {SignerService} from "../signer/signer.service";
-import {StartAuctionDto} from "../dto/start-auction.dto";
+import {StartAuctionDto} from "./start-auction.dto";
 import {ChainContractsService} from "../chain-contracts/chain-contracts.service";
 
 
@@ -75,7 +74,7 @@ export class AuctionService implements OnModuleInit {
 
     async startAuction(dto: StartAuctionDto) {
         const currentApproved = await this.auctionLotContract.getApproved(dto.auctionLotId);
-        const auctionContractAddress = this.chainContractsService.getContractAddress("Auction");
+        const auctionContractAddress = await this.auctionContract.getAddress();
         const needApproval = currentApproved.toLowerCase() !== auctionContractAddress.toLowerCase();
 
         if (needApproval) {
@@ -89,11 +88,12 @@ export class AuctionService implements OnModuleInit {
 
             await tx.wait();
         }
-        dto.creditAsset = this.chainContractsService.getContractAddress("EuroToken");
+
+        const creditAssetContract = await this.chainContractsService.getCurrencyContract(dto.creditAsset);
 
         return await this.auctionContract.startAuction(
             dto.auctionLotId,
-            dto.creditAsset ?? this.chainContractsService.getContractAddress("EuroToken"),
+            await creditAssetContract.getAddress(),
             dto.creditStartAmount,
             dto.creditEndAmount,
             dto.bidIncrement,
@@ -123,7 +123,7 @@ export class AuctionService implements OnModuleInit {
         }
     }
 
-    async getMyAuctions(): Promise<IAuctionV1.AuctionPoolDataStruct[]> {
+    async getMyAuctions(): Promise<Auction.AuctionPoolDataStruct[]> {
         const address = await this.signerService.getSignerWallet().getAddress();
         const raw = await this.auctionContract.getAuctionsBySeller(address);
 
@@ -200,7 +200,7 @@ export class AuctionService implements OnModuleInit {
         );
     }
 
-    private mapAuctionArrayToStruct(data: IAuctionV1.AuctionPoolDataStructOutput): IAuctionV1.AuctionPoolDataStruct {
+    private mapAuctionArrayToStruct(data: Auction.AuctionPoolDataStructOutput): Auction.AuctionPoolDataStruct {
         return {
             seller: data[0] as AddressLike,
             debitAsset: data[1] as AddressLike,

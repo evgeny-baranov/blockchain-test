@@ -1,32 +1,29 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.28;
 
-import "../../utils/ViewAccessManagedUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721BurnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721PausableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721URIStorageUpgradeable.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Burnable.sol";
 import "@openzeppelin/contracts/utils/introspection/ERC165.sol";
-import "hardhat/console.sol";
 import {AccessManager} from "../../AccessManager.sol";
-import {IAuctionLotV1} from "./IAuctionLotV1.sol";
 import {Version} from "../../utils/version/Version.sol";
+import {ViewAccessManagedUpgradeable} from "../../utils/ViewAccessManagedUpgradeable.sol";
+import {IAuctionLot} from "./IAuctionLot.sol";
 
 /// @custom:security-contact info@baranov.eu
 contract AuctionLotV1 is
-IAuctionLotV1,
 Version,
-ERC721Upgradeable,
 ERC721EnumerableUpgradeable,
-ERC721URIStorageUpgradeable,
 ERC721PausableUpgradeable,
-ViewAccessManagedUpgradeable,
 ERC721BurnableUpgradeable,
-UUPSUpgradeable
+ERC721URIStorageUpgradeable,
+ViewAccessManagedUpgradeable,
+UUPSUpgradeable,
+IAuctionLot
 {
     uint256 private _nextTokenId;
 
@@ -48,8 +45,8 @@ UUPSUpgradeable
         return tokenId;
     }
 
-    function burn(uint256 tokenId) public override(ERC721BurnableUpgradeable, IAuctionLotV1) restricted {
-        ERC721BurnableUpgradeable.burn(tokenId);
+    function burn(uint256 tokenId) public override(ERC721BurnableUpgradeable, IAuctionLot) restricted {
+        super.burn(tokenId);
     }
 
     function initialize(address initialAuthority) initializer public {
@@ -78,39 +75,33 @@ UUPSUpgradeable
         _unpause();
     }
 
-    function safeMint(address to, string memory uri) public restricted {
-        uint256 tokenId = _nextTokenId++;
-        _safeMint(to, tokenId);
-        _setTokenURI(tokenId, uri);
-    }
-
     function _authorizeUpgrade(address newImplementation) internal restricted override {
 
     }
 
     // The following functions are overrides required by Solidity.
     function _update(address to, uint256 tokenId, address auth) internal
-    override(ERC721Upgradeable, ERC721EnumerableUpgradeable, ERC721PausableUpgradeable)
+    override(ERC721EnumerableUpgradeable, ERC721PausableUpgradeable, ERC721Upgradeable)
     returns (address)
     {
         return super._update(to, tokenId, auth);
     }
 
     function _increaseBalance(address account, uint128 value) internal
-    override(ERC721Upgradeable, ERC721EnumerableUpgradeable)
+    override(ERC721EnumerableUpgradeable, ERC721Upgradeable)
     {
         super._increaseBalance(account, value);
     }
 
     function tokenURI(uint256 tokenId) public view
-    override(ERC721Upgradeable, ERC721URIStorageUpgradeable)
+    override(ERC721URIStorageUpgradeable, ERC721Upgradeable)
     returns (string memory)
     {
         return super.tokenURI(tokenId);
     }
 
     function supportsInterface(bytes4 interfaceId) public view
-    override(ERC721Upgradeable, ERC721EnumerableUpgradeable, ERC721URIStorageUpgradeable)
+    override(ERC721EnumerableUpgradeable, ERC721URIStorageUpgradeable, ERC721Upgradeable)
     returns (bool)
     {
         return super.supportsInterface(interfaceId);

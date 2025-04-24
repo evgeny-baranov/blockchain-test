@@ -31,7 +31,7 @@ interface ICommissionContainer {
 
     function commissionAmount(address creditAsset) external view returns (uint256);
 
-    function commissionPercent() external view returns (uint256);
+    function getCommissionPercent() external view returns (uint256);
 
     function getAllowedTokens() external view returns (TokenData[] memory);
 }

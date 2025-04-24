@@ -1,6 +1,6 @@
 import {Body, Controller, Get, Param, Post, Put} from '@nestjs/common';
 import {AuctionService} from "./auction.service";
-import {StartAuctionDto} from "../dto/start-auction.dto";
+import {StartAuctionDto} from "./start-auction.dto";
 
 @Controller('auction')
 export class AuctionController {
@@ -25,7 +25,9 @@ export class AuctionController {
     }
 
     @Get('lot/:id')
-    async getAuctionLotById(@Param('id') id: string) {
+    async getAuctionLotById(
+        @Param('id') id: string
+    ) {
         return this.auctionService.getTokenInfo(id);
     }
 

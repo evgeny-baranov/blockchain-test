@@ -19,6 +19,7 @@ test:
 ignition:
 	npx hardhat ignition deploy ./ignition/modules/DeployAllModule.ts --network localhost
 	npx hardhat ignition deploy ./ignition/modules/PostDeploySetupModule.ts --network localhost
+	npx hardhat ignition deploy ./ignition/modules/InitialContractRolesModule.ts --network localhost
 build:
 	npm run build
 

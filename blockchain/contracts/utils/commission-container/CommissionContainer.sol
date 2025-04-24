@@ -46,7 +46,10 @@ abstract contract CommissionContainer is Initializable, ICommissionContainer {
     {
         CommissionContainerStorage.Layout storage $ = CommissionContainerStorage.layout();
 
+        uint256 before = $.accumulatedCommissions[creditAsset];
         $.accumulatedCommissions[creditAsset] += amount;
+
+        console.log('_collectCommission', msg.sender, before, amount);
 
         emit CommissionCredited(creditAsset, amount);
     }

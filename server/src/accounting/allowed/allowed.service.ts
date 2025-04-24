@@ -34,19 +34,41 @@ export class AllowedService {
 
     addContainerAllowedToken(container: string, creditAsset: AddressLike) {
         const containerAddress = this.chainContractsService.getContractAddress(container);
+        const contract = this.chainContractsService.accountingContract;
 
-        this.chainContractsService.accountingContract.addContainerAllowedToken(
-            containerAddress,
-            creditAsset
-        );
+        try {
+            contract.addContainerAllowedToken(
+                containerAddress,
+                creditAsset
+            );
+        } catch (error: any) {
+            if (error.code === 'CALL_EXCEPTION' && error.data) {
+                const decoded = contract.interface.parseError(error.data);
+                console.log("Custom error:", decoded?.name, decoded?.args);
+                throw new Error(`Transaction reverted with error: ${decoded?.name}`);
+            }
+
+            throw error;
+        }
     }
 
     removeAllowedToken(container: string, creditAsset: AddressLike) {
         const contractAddress = this.chainContractsService.getContractAddress(container);
+        const contract = this.chainContractsService.accountingContract;
 
-        this.chainContractsService.accountingContract.removeContainerAllowedToken(
-            contractAddress,
-            creditAsset
-        );
+        try {
+            this.chainContractsService.accountingContract.removeContainerAllowedToken(
+                contractAddress,
+                creditAsset
+            );
+        } catch (error: any) {
+            if (error.code === 'CALL_EXCEPTION' && error.data) {
+                const decoded = contract.interface.parseError(error.data);
+                console.log("Custom error:", decoded?.name, decoded?.args);
+                throw new Error(`Transaction reverted with error: ${decoded?.name}`);
+            }
+
+            throw error;
+        }
     }
 }

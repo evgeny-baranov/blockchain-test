@@ -1,8 +1,8 @@
-import {Body, Controller, Copy, Delete, Get, Param, Put} from '@nestjs/common';
+import {Controller, Copy, Get, Param, Put} from '@nestjs/common';
 import {CommissionService} from './commission.service';
 import {AddressLike} from "ethers";
 
-@Controller('accounting/:container/commission')
+@Controller('accounting/commission/:container')
 export class CommissionController {
     constructor(private readonly commissionService: CommissionService) {
     }
