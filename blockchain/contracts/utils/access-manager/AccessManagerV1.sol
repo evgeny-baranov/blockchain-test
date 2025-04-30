@@ -7,7 +7,6 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import {Registry} from "./Registry.sol";
 import {Roles} from "../Roles.sol";
 import {Version} from "../version/Version.sol";
-import "hardhat/console.sol";
 
 /// @custom:security-contact info@baranov.eu
 contract AccessManagerV1 is
@@ -87,7 +86,6 @@ UUPSUpgradeable
 
         return newMember;
     }
-
 
     function _revokeRole(uint64 roleId, address account) internal override returns (bool) {
         bool revoked = super._revokeRole(roleId, account);

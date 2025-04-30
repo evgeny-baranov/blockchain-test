@@ -1,0 +1,33 @@
+### Environment
+@local = https://localhost
+@address = 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
+
+### Mapped {/auction/my, GET} route +0ms
+GET {{local}}/auction/
+
+### Mapped {/auction, POST} route
+POST https://localhost/auction
+Content-Type: application/json
+
+{
+  "auctionLotId": 1,
+  "creditCurrency": "usd",
+  "creditStartAmount": 100000,
+  "creditEndAmount": 1000000,
+  "bidIncrement": 10,
+  "duration": 300,
+  "claimDelay": 0
+}
+###
+DELETE {{local}}/auction/0
+###
+GET {{local}}/auction/0
+### Mapped {/auction/:auctionId/bid, PUT} route
+PUT {{local}}/auction/0/bid
+Content-Type: application/json
+
+{
+  "amount": "11000000",
+}
+###
+PUT {{local}}/auction/0/finalise

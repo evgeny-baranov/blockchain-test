@@ -20,6 +20,8 @@ import {
     AccessManager,
 } from '@blockchain/contracts';
 import {IERC20BaseToken} from "@blockchain/contracts/tokens";
+import {Currency} from "../types/currency.type";
+import {AddressLike} from "ethers";
 
 @Injectable()
 export class ChainContractsService implements OnModuleInit {
@@ -123,5 +125,37 @@ export class ChainContractsService implements OnModuleInit {
             default:
                 throw new Error(`Currency ${currency} is not supported`);
         }
+    }
+
+    async getCurrencyContractByAddress(address: AddressLike): Promise<IERC20BaseToken> {
+        const addressLower = address.toString().toLowerCase();
+        const usd = this.usdContract.target.toString().toLowerCase();
+        const eur = this.euroContract.target.toString().toLowerCase();
+
+        if (addressLower === usd) {
+            return this.usdContract;
+        }
+
+        if (addressLower === eur) {
+            return this.euroContract;
+        }
+
+        throw new Error(`Currency contract not found for address: ${address}`);
+    }
+
+    getCurrencyByAddress(creditAsset: AddressLike): Currency {
+        const addressLower = creditAsset.toString().toLowerCase();
+        const usd = this.usdContract.target.toString().toLowerCase();
+        const eur = this.euroContract.target.toString().toLowerCase();
+
+        if (addressLower === usd) {
+            return 'usd';
+        }
+
+        if (addressLower === eur) {
+            return 'eur';
+        }
+
+        throw new Error(`Currency contract not found for address: ${creditAsset}`);
     }
 }

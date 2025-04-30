@@ -1,6 +1,7 @@
 import {Controller, Copy, Get, Param, Put} from '@nestjs/common';
 import {CommissionService} from './commission.service';
 import {AddressLike} from "ethers";
+import {Currency} from "../../types/currency.type";
 
 @Controller('accounting/commission/:container')
 export class CommissionController {
@@ -12,7 +13,7 @@ export class CommissionController {
     withdrawCommission(
         @Param('container') container: string,
         @Param('to') to: AddressLike,
-        @Param("currency") currency: string
+        @Param("currency") currency: Currency
     ) {
         return this.commissionService.withdrawCommission(
             container,
@@ -24,7 +25,7 @@ export class CommissionController {
     @Get(':currency')
     getCommission(
         @Param('container') container: string,
-        @Param("currency") currency: string
+        @Param("currency") currency: Currency
     ) {
         return this.commissionService.getCommission(container, currency)
     }

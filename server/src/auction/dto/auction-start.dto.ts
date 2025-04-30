@@ -1,14 +1,14 @@
-import {IsNumber, IsPositive, IsEthereumAddress, Min, IsOptional, IsString} from 'class-validator';
+import {IsNumber, IsPositive, Min, IsString} from 'class-validator';
 import { Type } from 'class-transformer';
 
-export class StartAuctionDto {
+export class AuctionStartDto {
     @IsNumber()
     @Type(() => Number)
     @IsPositive()
     auctionLotId!: number;
 
     @IsString()
-    creditAsset!: string;
+    creditCurrency!: string;
 
     @IsNumber()
     @Type(() => Number)
@@ -24,10 +24,6 @@ export class StartAuctionDto {
     @Type(() => Number)
     @IsPositive()
     bidIncrement!: number;
-
-    @IsNumber()
-    @Type(() => Number)
-    startTime!: number;
 
     @IsNumber()
     @Type(() => Number)

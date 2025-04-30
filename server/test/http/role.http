@@ -1,0 +1,45 @@
+### Environments
+@local = https://localhost
+
+### Variables
+@address = 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
+@accounting = 0xa513E6E4b8f2a923D98304ec87F64353C4D5C853
+@auction = 0x8A791620dd6260079BF849Dc5567aDC3F2FdC318
+
+### Get all roles
+GET {{local}}/role
+
+### Get my roles
+GET {{local}}/role/my
+
+### Get roles by address
+GET {{local}}/role/{{accounting}}
+### Add a role to address
+PUT {{local}}/role/{{accounting}}/minter
+### Add a role to address with a specific role
+PUT {{local}}/role/{{accounting}}/accountant
+### Add a role to address with a specific role
+PUT {{local}}/role/{{accounting}}/burner
+
+### Get roles by address
+GET {{local}}/role/{{address}}
+### Add a role to address
+PUT {{local}}/role/{{address}}/minter
+### Add a role to address
+PUT {{local}}/role/{{address}}/burner
+### Add a role to address with a specific role
+PUT {{local}}/role/{{address}}/accountant
+
+### Remove a role from address
+DELETE {{local}}/role/{{address}}/burner
+### Remove a role from address
+DELETE {{local}}/role/{{address}}/minter
+### Remove a role from address
+DELETE {{local}}/role/{{address}}/accountant
+
+### Get roles by address
+GET {{local}}/role/{{auction}}
+###
+PUT {{local}}/role/{{auction}}/minter
+###
+PUT {{local}}/role/{{auction}}/burner

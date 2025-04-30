@@ -4,20 +4,17 @@ import {
     ExecutionContext,
     CallHandler,
 } from '@nestjs/common';
-import {Observable, map} from 'rxjs';
+import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
+import {replaceBigInt} from "./replace-bigint";
 
 @Injectable()
 export class BigIntSerializerInterceptor implements NestInterceptor {
     intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
         return next.handle().pipe(
             map((data) => {
-                if (data === undefined) return undefined;
-                return JSON.parse(JSON.stringify(data, this.bigIntReplacer));
+                return replaceBigInt(data);
             }),
         );
-    }
-
-    private bigIntReplacer(key: string , value: any): any {
-        return typeof value === 'bigint' ? value.toString() : value;
     }
 }

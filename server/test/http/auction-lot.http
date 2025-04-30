@@ -1,0 +1,15 @@
+### Environment
+@local = https://localhost
+@address = 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
+
+### Mapped {/auction/lot, GET} route +0ms
+GET {{local}}/auction-lot
+### Mapped {/auction/lot, GET} route +0ms
+GET {{local}}/auction-lot/1
+### Mapped {/auction/lot, POST} route +1ms
+POST https://localhost/auction-lot
+Content-Type: application/json
+
+{
+  "uri": "LOT URI 2"
+}

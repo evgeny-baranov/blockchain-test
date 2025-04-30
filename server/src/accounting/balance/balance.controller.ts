@@ -5,7 +5,9 @@ import {Currency} from "../../types/currency.type";
 
 @Controller('accounting/balance/:container')
 export class BalanceController {
-    constructor(private readonly balanceService: BalanceService) {
+    constructor(
+        private readonly balanceService: BalanceService
+    ) {
     }
 
     @Get()
@@ -30,7 +32,7 @@ export class BalanceController {
 
     @Delete(':currency/:amount')
     burnToken(
-        @Param('currency') currency: 'usd' | 'eur',
+        @Param('currency') currency: Currency,
         @Param('container') container: AddressLike,
         @Param('amount') amount: BigNumberish,
     ) {

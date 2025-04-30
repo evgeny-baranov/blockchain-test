@@ -2,6 +2,8 @@ import {Injectable} from '@nestjs/common';
 import {AddressLike, BigNumberish} from "ethers";
 import {ChainContractsService} from "../../chain-contracts/chain-contracts.service";
 import {SignerService} from "../../signer/signer.service";
+import {handleSmartContractError} from "../../errors/handle-smart-contract-errors";
+import {Currency} from "../../types/currency.type";
 
 @Injectable()
 export class BalanceService {
@@ -23,19 +25,13 @@ export class BalanceService {
                 eth: await this.signerService.getSignerWallet().provider?.getBalance(container),
             };
         } catch (error: any) {
-            if (error.code === 'CALL_EXCEPTION' && error.data) {
-                const decoded = usd.interface.parseError(error.data);
-                console.log("Custom error:", decoded?.name, decoded?.args);
-                throw new Error(`Transaction reverted with error: ${decoded?.name}`);
-            }
-
-            throw error;
+            handleSmartContractError(eur.interface, error);
         }
     }
 
     async mintToken(
         container: AddressLike,
-        currency: "usd" | "eur",
+        currency: Currency,
         amount: BigNumberish
     ) {
         const contract = await this.chainContractsService.getCurrencyContract(currency);
@@ -43,17 +39,11 @@ export class BalanceService {
         try {
             contract.mintTo(container, amount);
         } catch (error: any) {
-            if (error.code === 'CALL_EXCEPTION' && error.data) {
-                const decoded = contract.interface.parseError(error.data);
-                console.log("Custom error:", decoded?.name, decoded?.args);
-                throw new Error(`Transaction reverted with error: ${decoded?.name}`);
-            }
-
-            throw error;
+            handleSmartContractError(contract.interface, error);
         }
     }
 
-    async burnToken(container: AddressLike, currency: "usd" | "eur", amount: BigNumberish) {
+    async burnToken(container: AddressLike, currency: Currency, amount: BigNumberish) {
         const contract = await this.chainContractsService.getCurrencyContract(currency);
         const signerAddress = this.signerService.getSignerWallet().address;
 
@@ -63,23 +53,21 @@ export class BalanceService {
         );
 
         if (allowance < BigInt(amount)) {
-            const approveTx = await contract.approve(
-                signerAddress,
-                amount
-            );
-            await approveTx.wait();
+            try {
+                const approveTx = await contract.approve(
+                    signerAddress,
+                    amount
+                );
+                await approveTx.wait();
+            } catch (error: any) {
+                handleSmartContractError(contract.interface, error);
+            }
         }
 
         try {
             await contract.burnFrom(container, amount);
         } catch (error: any) {
-            if (error.code === 'CALL_EXCEPTION' && error.data) {
-                const decoded = contract.interface.parseError(error.data);
-                console.log("Custom error:", decoded?.name, decoded?.args);
-                throw new Error(`Transaction reverted with error: ${decoded?.name}`);
-            }
-
-            throw error;
+            handleSmartContractError(contract.interface, error);
         }
     }
 }
