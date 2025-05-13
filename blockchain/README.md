@@ -1,9 +1,8 @@
 # Auction Hardhat Project
 
-## Run blockcahin service
+## Run blockchain service
 
 .env file example:
-
 ```dotenv
 # local/development/production/
 NODE_ENV=development
@@ -41,19 +40,7 @@ docker-compose exec blockchain make compile
 docker-compose exec blockchain make ignition
 ```
 
-## Prepare sources for API server
-
+set up the role for test environment
 ```shell
-docker-compose exec blockchain make build
+docker-compose exec blockchain make ignition-test
 ```
-
-## Run NestJS server
-
-```shell
-docker-compose up server
-```
-
-# API
-
-Use test *.http files: `server/test/http`
-

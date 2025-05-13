@@ -13,9 +13,8 @@ GET {{local}}/accounting/balance/{{address}}
 GET {{local}}/accounting/balance/{{address2}}
 ###
 GET {{local}}/accounting/balance/{{accounting}}
-###
+### mint USD
 PUT {{local}}/accounting/balance/{{address}}/usd/11000000
-
 ### mint EUR
 PUT {{local}}/accounting/balance/{{address}}/eur/11000000
 

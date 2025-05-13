@@ -11,5 +11,5 @@ POST https://localhost/auction-lot
 Content-Type: application/json
 
 {
-  "uri": "LOT URI 2"
+  "uri": "LOT URI 1"
 }

@@ -15,19 +15,19 @@ Content-Type: application/json
   "creditStartAmount": 100000,
   "creditEndAmount": 1000000,
   "bidIncrement": 10,
-  "duration": 300,
+  "duration": 30000,
   "claimDelay": 0
 }
 ###
 DELETE {{local}}/auction/0
-###
+### get auction info
 GET {{local}}/auction/0
-### Mapped {/auction/:auctionId/bid, PUT} route
+### place auction bid
 PUT {{local}}/auction/0/bid
 Content-Type: application/json
 
 {
-  "amount": "11000000",
+  "amount": "11000000"
 }
 ###
 PUT {{local}}/auction/0/finalise

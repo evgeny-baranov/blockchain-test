@@ -19,3 +19,8 @@ blockchain/node_modules
 /blockchain/dist/
 /server/node_modules/
 /blockchain/node_modules/
+/.idea/blockchain-test.iml
+/.idea/httpClient.xml
+/.idea/modules.xml
+/.idea/php.xml
+/.idea/vcs.xml
