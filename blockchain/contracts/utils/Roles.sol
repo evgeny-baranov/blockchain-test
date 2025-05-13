@@ -5,12 +5,12 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20BurnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721BurnableUpgradeable.sol";
 import {AuctionLot} from "../AuctionLot.sol";
-import {EuroToken} from "../EuroToken.sol";
-import {IERC20BaseToken} from "../tokens/IERC20BaseToken.sol";
-import {ICommissionContainer} from "../utils/commission-container/ICommissionContainer.sol";
-import {IRegistry} from "./access-manager/IRegistry.sol";
 import {Auction} from "../Auction.sol";
+import {ICommissionContainer} from "../utils/commission-container/ICommissionContainer.sol";
 import {ICommissionManager} from "../accounting/ICommissionManager.sol";
+import {IERC20BaseToken} from "../tokens/IERC20BaseToken.sol";
+import {IRegistry} from "./access-manager/IRegistry.sol";
+import {IAuctionLot} from "../tokens/auction-lot/IAuctionLot.sol";
 
 library Roles {
     struct RoleSelectors {
@@ -83,9 +83,10 @@ library Roles {
     }
 
     function getMintSelectors() internal pure returns (bytes4[] memory) {
-        bytes4[2] memory temporary = [
+        bytes4[3] memory temporary = [
                             IERC20BaseToken.mint.selector,
-                            IERC20BaseToken.mintTo.selector
+                            IERC20BaseToken.mintTo.selector,
+                            IAuctionLot.mint.selector
             ];
 
         bytes4[] memory selectors = new bytes4[](temporary.length);
@@ -125,7 +126,7 @@ library Roles {
                             ICommissionContainer.updateCommissionPercent.selector,
 
                             ICommissionManager.containerCommissionPercent.selector,
-                            ICommissionContainer.commissionPercent.selector,
+                            ICommissionContainer.getCommissionPercent.selector,
 
                             ICommissionManager.containerCommissionAmount.selector,
                             ICommissionContainer.commissionAmount.selector,

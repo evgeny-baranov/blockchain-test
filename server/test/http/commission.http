@@ -1,0 +1,33 @@
+### Environment
+@local = https://localhost
+
+### Variables
+@address = 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
+@address2 = 0x70997970C51812dc3A010C7d01b50e0d17dc79C8
+@accounting = accounting
+@auction = auction
+@eur = eur
+@usd = usd
+
+### Get balances
+GET {{local}}/accounting/commission/{{accounting}}/{{usd}}
+###
+GET {{local}}/accounting/commission/{{accounting}}/{{eur}}
+###
+GET {{local}}/accounting/commission/{{auction}}/{{usd}}
+###
+GET {{local}}/accounting/commission/{{auction}}/{{eur}}
+
+
+### Get commission percent
+GET {{local}}/accounting/commission/{{auction}}
+###
+GET {{local}}/accounting/commission/{{accounting}}
+
+### Set commission percent
+PUT {{local}}/accounting/commission/{{auction}}/12
+
+### /accounting/commission/:container/:currency/:to
+COPY {{local}}/accounting/commission/{{auction}}/usd/{{address2}}
+### /accounting/commission/:container/:currency/:to
+COPY {{local}}/accounting/commission/{{auction}}/eur/{{address2}}

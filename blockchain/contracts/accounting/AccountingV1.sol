@@ -54,7 +54,7 @@ ICommissionManager
     function containerCommissionPercent(address container) external view
     restrictedView
     returns (uint256) {
-        return ICommissionContainer(container).commissionPercent();
+        return ICommissionContainer(container).getCommissionPercent();
     }
 
     function updateContainerCommissionPercent(address container, uint256 commissionPercent) external
@@ -96,7 +96,7 @@ ICommissionManager
         return _commissionAmount(creditAsset);
     }
 
-    function commissionPercent() external view
+    function getCommissionPercent() external view
     restrictedView
     returns (uint256) {
         return _commissionPercent();

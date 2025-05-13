@@ -1,0 +1,30 @@
+### Environment
+@local = https://localhost
+
+### Variables
+@address = 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
+@accounting = accounting
+@auction = auction
+@eur = 0x610178dA211FEF7D417bC0e6FeD39F05609AD788
+@usd = 0xB7f8BC63BbcaD18155201308C8f3540b07f84F5e
+
+### Get all allowed credit assets for a container
+GET {{local}}/accounting/allowed/{{auction}}
+### Allow a credit asset for a container
+PUT {{local}}/accounting/allowed/{{auction}}/{{usd}}
+### Allow a credit asset for a container
+PUT {{local}}/accounting/allowed/{{auction}}/{{eur}}
+
+
+
+### Get all allowed credit assets for a container
+GET {{local}}/accounting/allowed/{{accounting}}
+### Allow a credit asset for a container
+PUT {{local}}/accounting/allowed/{{accounting}}/{{usd}}
+### Allow a credit asset for a container
+PUT {{local}}/accounting/allowed/{{accounting}}/{{eur}}
+
+### Remove a credit asset from a container
+DELETE {{local}}/accounting/allowed/{{accounting}}/{{usd}}
+### Remove a credit asset from a container
+DELETE {{local}}/accounting/allowed/{{accounting}}/{{eur}}

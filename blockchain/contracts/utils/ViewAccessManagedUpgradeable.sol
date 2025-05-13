@@ -11,7 +11,7 @@ abstract contract ViewAccessManagedUpgradeable is AccessManagedUpgradeable {
     }
 
     function _checkCanCallView(address caller, bytes calldata data) internal virtual view {
-        (bool immediate, uint32 delay) = AuthorityUtils.canCallWithDelay(
+        (bool immediate, ) = AuthorityUtils.canCallWithDelay(
             authority(),
             caller,
             address(this),

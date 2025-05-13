@@ -1,10 +1,12 @@
-import {Injectable, NotFoundException, OnModuleInit} from '@nestjs/common';
-import {AddressLike} from "ethers";
-import {Auction, AuctionLot, EuroToken} from '@blockchain/contracts';
-import {IAuctionV1} from '@blockchain/contracts/auction/IAuctionV1';
+import {Injectable, OnModuleInit} from '@nestjs/common';
+import {AddressLike, BigNumberish} from "ethers";
+import {Auction, AuctionLot} from '@blockchain/contracts';
+import {IAuctionStorage} from '@blockchain/contracts/Auction';
 import {SignerService} from "../signer/signer.service";
-import {StartAuctionDto} from "../dto/start-auction.dto";
+import {AuctionStartDto} from "./dto/auction-start.dto";
 import {ChainContractsService} from "../chain-contracts/chain-contracts.service";
+import {AuctionInfoDto} from "./dto/auction-info.dto";
+import {handleSmartContractError} from "../errors/handle-smart-contract-errors";
 
 
 @Injectable()
@@ -23,59 +25,14 @@ export class AuctionService implements OnModuleInit {
         return this.chainContractsService.auctionLotContract;
     }
 
-    get euroContract(): EuroToken {
-        return this.chainContractsService.euroContract;
-    }
-
     onModuleInit(): any {
         this.initContractEvents();
         this.initCommissionEvents();
     }
 
-    createAuctionLot(uri: string) {
-        return this.auctionContract.createAuctionLot(
-            uri
-        );
-    }
-
-    async getTokensOfOwner() {
-        const address = await this.signerService.getSignerWallet().getAddress();
-        const tokenIds: bigint[] = await this.auctionLotContract.getTokensOfOwner(address);
-
-        return tokenIds.map(id => id.toString());
-    }
-
-    async getTokenInfo(tokenId: string) {
-        try {
-            const [owner, tokenURI, name, symbol, version, auctionId] = await Promise.all([
-                this.auctionLotContract.ownerOf(tokenId),
-                this.auctionLotContract.tokenURI(tokenId),
-                this.auctionLotContract.name(),
-                this.auctionLotContract.symbol(),
-                this.auctionLotContract.version(),
-                this.auctionContract.getAuctionId(
-                    this.chainContractsService.getContractAddress('AuctionLot'),
-                    tokenId
-                ),
-            ]);
-
-            return {
-                tokenId,
-                auctionId,
-                owner,
-                tokenURI,
-                name,
-                symbol,
-                version
-            };
-        } catch (e) {
-            throw new NotFoundException(`Token with ID ${tokenId} not found`);
-        }
-    }
-
-    async startAuction(dto: StartAuctionDto) {
+    async startAuction(dto: AuctionStartDto) {
         const currentApproved = await this.auctionLotContract.getApproved(dto.auctionLotId);
-        const auctionContractAddress = this.chainContractsService.getContractAddress("Auction");
+        const auctionContractAddress = await this.auctionContract.getAddress();
         const needApproval = currentApproved.toLowerCase() !== auctionContractAddress.toLowerCase();
 
         if (needApproval) {
@@ -89,41 +46,81 @@ export class AuctionService implements OnModuleInit {
 
             await tx.wait();
         }
-        dto.creditAsset = this.chainContractsService.getContractAddress("EuroToken");
 
-        return await this.auctionContract.startAuction(
-            dto.auctionLotId,
-            dto.creditAsset ?? this.chainContractsService.getContractAddress("EuroToken"),
-            dto.creditStartAmount,
-            dto.creditEndAmount,
-            dto.bidIncrement,
-            dto.startTime,
-            dto.duration,
-            dto.claimDelay
-        );
-    }
+        const creditAssetContract = await this.chainContractsService.getCurrencyContract(dto.creditCurrency);
 
-    async placeBid(auctionId: string, amount: bigint) {
         try {
-            const approveTx = await this.euroContract.approve(
-                this.chainContractsService.getContractAddress('Auction'),
-                amount
+            await this.auctionContract.startAuction(
+                dto.auctionLotId,
+                await creditAssetContract.getAddress(),
+                dto.creditStartAmount,
+                dto.creditEndAmount,
+                dto.bidIncrement,
+                Math.floor(Date.now() / 1000),
+                dto.duration,
+                dto.claimDelay
             );
-
-            await approveTx.wait();
-
-            return await this.auctionContract.placeBid(
-                auctionId,
-                amount
-            );
-        } catch (err: any) {
-            const reason = err?.error?.data?.errorName || err?.error?.message || err?.message;
-            console.error('Transaction failed:', reason);
-            throw err;
+        } catch (error: any) {
+            handleSmartContractError(this.auctionContract.interface, error);
         }
     }
 
-    async getMyAuctions(): Promise<IAuctionV1.AuctionPoolDataStruct[]> {
+    async cancelAuction(auctionId: BigNumberish) {
+        try {
+            await this.auctionContract.cancelAuction(
+                auctionId
+            );
+        } catch (error: any) {
+            handleSmartContractError(this.auctionContract.interface, error);
+        }
+    }
+
+    async finaliseAuction(auctionId: BigNumberish) {
+        try {
+            await this.auctionContract.finaliseAuction(
+                auctionId
+            );
+        } catch (error: any) {
+            handleSmartContractError(this.auctionContract.interface, error);
+        }
+    }
+
+    async getAuction(auctionId: BigNumberish) {
+        const raw = await this.auctionContract.getAuction(
+            auctionId
+        );
+
+        return this.mapAuctionArrayToStruct(raw);
+    }
+
+    async placeBid(auctionId: BigNumberish, amount: BigNumberish) {
+        const auction = await this.getAuction(auctionId);
+
+        const creditAssetContract = await this.chainContractsService.getCurrencyContractByAddress(
+            auction.creditAsset
+        );
+
+        const userAddress = await this.signerService.publicAddress;
+        const auctionAddress = await this.auctionContract.getAddress();
+
+        const allowance = await creditAssetContract.allowance(userAddress, auctionAddress);
+        if (allowance < BigInt(amount)) {
+            try {
+                const approveTx = await creditAssetContract.approve(auctionAddress, amount);
+                await approveTx.wait();
+            } catch (error: any) {
+                return handleSmartContractError(creditAssetContract.interface, error);
+            }
+        }
+
+        try {
+            await this.auctionContract.placeBid(auctionId, amount);
+        } catch (error: any) {
+            handleSmartContractError(this.auctionContract.interface, error);
+        }
+    }
+
+    async getMyAuctions() {
         const address = await this.signerService.getSignerWallet().getAddress();
         const raw = await this.auctionContract.getAuctionsBySeller(address);
 
@@ -200,26 +197,52 @@ export class AuctionService implements OnModuleInit {
         );
     }
 
-    private mapAuctionArrayToStruct(data: IAuctionV1.AuctionPoolDataStructOutput): IAuctionV1.AuctionPoolDataStruct {
+    private mapAuctionArrayToStruct(data: IAuctionStorage.AuctionPoolDataStructOutput): AuctionInfoDto {
+        const {
+            auctionId,
+            seller,
+            debitAsset,
+            debitAssetId,
+            debitAmount,
+            creditAsset,
+            creditStartAmount,
+            creditEndAmount,
+            highestBidder,
+            highestBid,
+            bidIncrement,
+            startTime,
+            closeTime,
+            claimDelay,
+            claimed
+        } = data;
+
+        const creditCurrency = this.chainContractsService.getCurrencyByAddress(creditAsset);
+
+        const auctionPoolDataStruct: IAuctionStorage.AuctionPoolDataStruct = {
+            auctionId,
+            seller,
+            debitAsset,
+            debitAssetId,
+            debitAmount,
+
+            creditAsset,
+            creditStartAmount,
+            creditEndAmount,
+
+            highestBidder,
+            highestBid,
+
+            bidIncrement,
+            startTime,
+            closeTime,
+
+            claimDelay,
+            claimed,
+        } as IAuctionStorage.AuctionPoolDataStruct;
+
         return {
-            seller: data[0] as AddressLike,
-            debitAsset: data[1] as AddressLike,
-            debitAssetId: BigInt(data[2]),
-            debitAmount: BigInt(data[3]),
-
-            creditAsset: data[4] as AddressLike,
-            creditStartAmount: BigInt(data[5]),
-            creditEndAmount: BigInt(data[6]),
-
-            highestBidder: data[7] as AddressLike,
-            highestBid: BigInt(data[8]),
-
-            bidIncrement: BigInt(data[9]),
-            startTime: Number(data[10]),
-            closeTime: Number(data[11]),
-
-            claimDelay: Number(data[12]),
-            claimed: Boolean(data[13]),
-        };
+            creditCurrency,
+            ...auctionPoolDataStruct
+        } as AuctionInfoDto;
     }
 }

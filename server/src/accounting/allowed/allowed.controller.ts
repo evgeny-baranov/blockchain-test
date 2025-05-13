@@ -2,7 +2,7 @@ import {Controller, Delete, Get, Param, Put} from '@nestjs/common';
 import {AllowedService} from './allowed.service';
 import {AddressLike} from "ethers";
 
-@Controller('accounting/:container/allowed')
+@Controller('accounting/allowed/:container')
 export class AllowedController {
     constructor(
         private readonly allowedService: AllowedService,

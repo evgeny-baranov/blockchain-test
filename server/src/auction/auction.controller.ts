@@ -1,6 +1,8 @@
-import {Body, Controller, Get, Param, Post, Put} from '@nestjs/common';
+import {Body, Controller, Delete, Get, Param, Post, Put} from '@nestjs/common';
 import {AuctionService} from "./auction.service";
-import {StartAuctionDto} from "../dto/start-auction.dto";
+import {AuctionStartDto} from "./dto/auction-start.dto";
+import {AuctionBidDto} from "./dto/auction-bid.dto";
+import {BigNumberish} from "ethers";
 
 @Controller('auction')
 export class AuctionController {
@@ -10,44 +12,47 @@ export class AuctionController {
     ) {
     }
 
-    @Post('lot')
-    async createAuctionLot(@Body() body: {
-        uri: string
-    }) {
-        return this.auctionService.createAuctionLot(
-            body.uri
-        );
-    }
-
-    @Get('lot')
-    async getAuctionLot() {
-        return this.auctionService.getTokensOfOwner();
-    }
-
-    @Get('lot/:id')
-    async getAuctionLotById(@Param('id') id: string) {
-        return this.auctionService.getTokenInfo(id);
-    }
-
-    @Get('my')
+    @Get('')
     async getAuctions() {
         return this.auctionService.getMyAuctions();
     }
 
+    @Delete(':auctionId')
+    async cancelAuction(
+        @Param('auctionId') auctionId: BigNumberish,
+    ) {
+        await this.auctionService.cancelAuction(auctionId);
+    }
+
+    @Get(':auctionId')
+    async getAuction(
+        @Param('auctionId') auctionId: BigNumberish,
+    ) {
+        return this.auctionService.getAuction(auctionId);
+    }
+
     @Put(':auctionId/bid')
     async placeBid(
-        @Param('auctionId') auctionId: string,
-        @Body() body: {
-            amount: string
-        }) {
+        @Param('auctionId') auctionId: BigNumberish,
+        @Body() bid: AuctionBidDto
+    ) {
         return this.auctionService.placeBid(
             auctionId,
-            BigInt(body.amount)
+            BigInt(bid.amount)
+        );
+    }
+
+    @Put(':auctionId/finalise')
+    finaliseAuction(
+        @Param('auctionId') auctionId: BigNumberish,
+    ) {
+        return this.auctionService.finaliseAuction(
+            auctionId
         );
     }
 
     @Post()
-    startAuction(@Body() dto: StartAuctionDto) {
+    startAuction(@Body() dto: AuctionStartDto) {
         return this.auctionService.startAuction(dto);
     }
 }

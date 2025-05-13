@@ -1,0 +1,8 @@
+### Environment
+@local = https://localhost
+
+###
+GET {{local}}/contract
+
+### Get all roles
+GET {{local}}/contract/Auction

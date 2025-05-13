@@ -1,0 +1,25 @@
+### Environment
+@local = https://localhost
+@address = 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
+@address2 = 0x70997970C51812dc3A010C7d01b50e0d17dc79C8
+@auction = 0x8A791620dd6260079BF849Dc5567aDC3F2FdC318
+@accounting = 0xa513E6E4b8f2a923D98304ec87F64353C4D5C853
+
+###
+GET {{local}}/accounting/balance/{{auction}}
+###
+GET {{local}}/accounting/balance/{{address}}
+###
+GET {{local}}/accounting/balance/{{address2}}
+###
+GET {{local}}/accounting/balance/{{accounting}}
+###
+PUT {{local}}/accounting/balance/{{address}}/usd/11000000
+
+### mint EUR
+PUT {{local}}/accounting/balance/{{address}}/eur/11000000
+
+### burn
+DELETE {{local}}/accounting/balance/{{address}}/usd/299999
+### burn
+DELETE {{local}}/accounting/balance/{{address}}/eur/999999

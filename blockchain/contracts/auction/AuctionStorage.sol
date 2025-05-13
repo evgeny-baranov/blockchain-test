@@ -2,12 +2,15 @@
 pragma solidity ^0.8.28;
 
 import {Auction} from "../Auction.sol";
+import {IAuctionStorage} from "./IAuctionStorage.sol";
 
 library AuctionStorage {
-
     struct Layout {
-        mapping(uint256 => Auction.AuctionPoolData) auctions;
+        mapping(uint256 => IAuctionStorage.AuctionPoolData) auctions;
         mapping(address => uint256[]) sellerAuctions;
+        mapping(uint256 => mapping(address => IAuctionStorage.Bid)) bidsByAuction;
+        mapping(uint256 => address[]) biddersList;
+        uint256 auctionCount;
     }
 
     // keccak256("auction.storage.AuctionStorage") & ~bytes32(uint256(0xff))

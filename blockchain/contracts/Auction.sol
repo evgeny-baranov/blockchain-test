@@ -4,49 +4,10 @@ pragma solidity ^0.8.28;
 import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 import {IVersion} from "./utils/version/IVersion.sol";
 import {ICommissionContainer} from "./utils/commission-container/ICommissionContainer.sol";
+import {IAuctionStorage} from "./auction/IAuctionStorage.sol";
 
 
-interface Auction is IVersion, ICommissionContainer, IERC721Receiver {
-    struct AuctionPoolData {
-        address seller;
-
-        address debitAsset; // Address of the token being sold (debit side)
-        uint256 debitAssetId; // NFT id being sold
-        uint256 debitAmount;
-
-        address creditAsset; // Address of the token being received (credit side)
-        uint256 creditStartAmount; // Auction start price
-        uint256 creditEndAmount;
-
-        address highestBidder; // Address of the highest bidder
-        uint256 highestBid;    // Highest bid value
-
-        uint256 bidIncrement;  // Minimum bid increment
-        uint48 startTime; // Start time of the auction
-        uint48 closeTime; // Close time of the auction
-
-        uint32 claimDelay; // the delay timestamp in seconds when buyers can claim after close
-
-        bool claimed; // Whether the seller has claimed the proceeds
-    }
-
-    struct CreateAuctionRequest {
-        address creditAsset;
-        uint256 creditStartAmount;
-        uint256 creditEndAmount;
-        uint256 bidIncrement;
-        uint48 startTime;
-        uint32 duration;
-        uint32 claimDelay;
-    }
-
-
-    struct Bid {
-        address bidder;
-        uint256 amount;
-        uint48 timestamp;
-    }
-
+interface Auction is IVersion, ICommissionContainer, IAuctionStorage, IERC721Receiver {
     event AuctionClaimed(uint256 indexed auctionId, address indexed seller, uint256 amount, uint256 commission);
     event AuctionCancelled(uint256 indexed auctionId, address indexed seller);
     event AuctionLotReceived(address operator, address from, uint256 tokenId, bytes data);
@@ -69,9 +30,9 @@ interface Auction is IVersion, ICommissionContainer, IERC721Receiver {
 
     function createAuctionLot(string memory uri) external returns (uint256);
 
-    function getAuctionId(address debitAssetAddress, uint256 tokenId) external pure returns (uint256);
-
     function getAuctionsBySeller(address seller) external view returns (AuctionPoolData[] memory);
+
+    function getAuction(uint256 auctionId) external view returns (AuctionPoolData memory);
 
     function startAuction(
         uint256 auctionLotId,
@@ -89,6 +50,8 @@ interface Auction is IVersion, ICommissionContainer, IERC721Receiver {
     function finaliseAuction(uint256 auctionId) external;
 
     function cancelAuction(uint256 auctionId) external;
+
+    function getWinningBid(uint256 auctionId) external view returns (Bid memory winnerBid);
 
     function withdraw() external;
 }

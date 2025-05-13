@@ -2,6 +2,7 @@ import {NestFactory} from '@nestjs/core';
 import {AppModule} from './app.module';
 import * as fs from 'fs';
 import {BigIntSerializerInterceptor} from "./interceptor/bigint-serializer.interceptor";
+import {BigIntExceptionFilter} from "./interceptor/bigint-exception.filter";
 
 async function bootstrap() {
     const httpsOptions = {
@@ -13,6 +14,7 @@ async function bootstrap() {
     });
 
     app.useGlobalInterceptors(new BigIntSerializerInterceptor());
+    app.useGlobalFilters(new BigIntExceptionFilter());
 
     await app.listen(process.env.SERVER_PORT ?? 3000);
 }

@@ -17,9 +17,12 @@ compile:
 test:
 	REPORT_GAS=true npx hardhat test
 ignition:
-	npx hardhat ignition deploy ./ignition/modules/DeployAllModule.ts --network localhost
-	npx hardhat ignition deploy ./ignition/modules/PostDeploySetupModule.ts --network localhost
+	npx hardhat ignition deploy ./ignition/modules/DeployAllModule.ts --network $(NETWORK)
+	npx hardhat ignition deploy ./ignition/modules/PostDeploySetupModule.ts --network $(NETWORK)
+	npx hardhat ignition deploy ./ignition/modules/InitialContractRolesModule.ts --network $(NETWORK)
+ignition-test:
+	npx hardhat ignition deploy ./ignition/modules/PostDeployTestSetupModule.ts --network $(NETWORK)
 build:
 	npm run build
 
-.PHONY: install clean node compile test ignition build
+.PHONY: install clean node compile test ignition ignition-test build
