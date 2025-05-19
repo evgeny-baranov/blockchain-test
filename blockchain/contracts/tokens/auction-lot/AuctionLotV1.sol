@@ -26,6 +26,7 @@ UUPSUpgradeable,
 IAuctionLot
 {
     uint256 private _nextTokenId;
+    string private _baseUri;
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -53,6 +54,7 @@ IAuctionLot
         require(initialAuthority != address(0), "Invalid authority address");
 
         _nextTokenId = 1;
+        _baseUri = "ipfs://baranov.eu/";
 
         __ERC721_init("AuctionLot", "AULOT");
         __ERC721Enumerable_init();
@@ -63,8 +65,8 @@ IAuctionLot
         __UUPSUpgradeable_init();
     }
 
-    function _baseURI() internal pure override returns (string memory) {
-        return "https://baranov.eu/nft/";
+    function _baseURI() internal view override returns (string memory) {
+        return _baseUri;
     }
 
     function pause() public restricted {
@@ -114,5 +116,9 @@ IAuctionLot
             tokenIds[i] = tokenOfOwnerByIndex(owner, i);
         }
         return tokenIds;
+    }
+
+    function setBaseURI(string memory newBaseUri) external restricted {
+        _baseUri = newBaseUri;
     }
 }

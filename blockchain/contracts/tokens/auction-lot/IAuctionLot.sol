@@ -11,4 +11,6 @@ interface IAuctionLot {
     function burn(uint256 tokenId) external;
 
     function getTokensOfOwner(address owner) external view returns (uint256[] memory);
+
+    function setBaseURI(string memory newBaseUri) external;
 }

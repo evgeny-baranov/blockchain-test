@@ -44,7 +44,6 @@ abstract contract Registry is IRegistry, Initializable {
         return RegistryStorage.layout().rolesByUser[user];
     }
 
-
     function getContract(string memory name) public view returns (address) {
         return _getRegisteredContract(
             keccak256(abi.encodePacked(name))
