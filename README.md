@@ -57,3 +57,10 @@ docker-compose up server
 
 Use test *.http files: `server/test/http`
 
+# Update
+```shell
+docker-compose -f ./docker-compose.yaml run blockchain npm update
+```
+```shell
+docker-compose -f ./docker-compose.yaml run server npm update
+```
