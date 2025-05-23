@@ -14,5 +14,8 @@
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "sourceMap": true
-  }
+  },
+  "files": [
+    "./hardhat.config.ts"
+  ]
 }

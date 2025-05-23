@@ -14,6 +14,4 @@ interface IERC20BaseToken is IVersion, IERC20Metadata, IERC20Errors, IAccessMana
     function burn(uint256 value) external;
 
     function burnFrom(address account, uint256 value) external;
-
-    function grantRole(address account, uint64 roleId) external;
 }

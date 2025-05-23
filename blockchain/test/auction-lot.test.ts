@@ -3,7 +3,10 @@ import "@nomicfoundation/hardhat-chai-matchers";
 import {deployAuctionLot} from "./deploys/auction-lot.deploy";
 import {ethers} from "hardhat";
 
-import {AccessManager, AuctionLot} from "../typechain-types";
+import {
+    AccessManager,
+    AuctionLot,
+} from "../typechain-types";
 import {deployAccessManager} from "./deploys/access-manager.deploy";
 
 describe("AuctionLotV1", function () {
@@ -14,7 +17,7 @@ describe("AuctionLotV1", function () {
     beforeEach(async () => {
         [owner] = await ethers.getSigners();
         accessManager = await deployAccessManager(owner);
-        auctionLot = await deployAuctionLot(owner, accessManager);
+        auctionLot = await deployAuctionLot(accessManager);
     });
 
     it("should deploy and mint token successfully by authorized user", async () => {
@@ -168,4 +171,24 @@ describe("AuctionLotV1", function () {
         );
     });
 
+    it("should allow an authorized account to set base URI", async function () {
+        const [admin] = await ethers.getSigners();
+
+        const newUri = "https://example.com/api/";
+        await auctionLot.connect(admin).setBaseURI(newUri);
+
+        const tokenId = 1;
+        await auctionLot.connect(admin).mint(admin.address, `${tokenId}`);
+
+        const uri = await auctionLot.tokenURI(tokenId);
+        expect(uri).to.equal(`${newUri}${tokenId}`);
+    });
+
+    it("should revert if unauthorized account tries to set base URI", async function () {
+        const [, attacker] = await ethers.getSigners();
+
+        await expect(
+            auctionLot.connect(attacker).setBaseURI("https://hacker.com/api/")
+        ).to.be.revertedWithCustomError(auctionLot, "AccessManagedUnauthorized");
+    });
 });

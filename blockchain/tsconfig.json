@@ -20,5 +20,6 @@
   },
   "include": [
     "typechain-types/**/*"
-  ]
+  ],
+  "files": ["./hardhat.config.ts"]
 }

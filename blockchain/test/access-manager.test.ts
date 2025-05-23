@@ -2,10 +2,12 @@ import {expect} from "chai";
 import "@nomicfoundation/hardhat-chai-matchers";
 import {ethers} from "hardhat";
 import {deployAccessManager} from "./deploys/access-manager.deploy";
+import {AccessManager} from "../typechain-types";
+import {HardhatEthersSigner} from "@nomicfoundation/hardhat-ethers/signers";
 
 describe("AccessManager - Contract Registration", function () {
-    let accessManager: any;
-    let owner: any;
+    let accessManager: AccessManager;
+    let owner: HardhatEthersSigner;
 
     beforeEach(async () => {
         [owner] = await ethers.getSigners();
@@ -98,5 +100,82 @@ describe("AccessManager - Contract Registration", function () {
 
         expect(names).to.include.members([hashA, hashB]);
         expect(addresses).to.include.members([addressA, addressB]);
+    });
+
+    it("should return a list of predefined roles with label, role, and selectors", async function () {
+        const roles = await accessManager.getRoles();
+
+        expect(roles).to.be.an("array");
+        expect(roles.length).to.be.greaterThan(0);
+
+        for (const roleSelector of roles) {
+            expect(roleSelector.label).to.be.a("string").and.not.to.be.empty;
+            expect(roleSelector.role).to.be.a("bigint");
+            expect(roleSelector.selectors).to.be.an("array");
+
+            for (const selector of roleSelector.selectors) {
+                expect(selector).to.match(/^0x[0-9a-fA-F]{8}$/); // bytes4
+            }
+        }
+    });
+
+    it("should return roles assigned to an address", async function () {
+        const [, user] = await ethers.getSigners();
+        const roles = await accessManager.getRoles();
+        const roleId = roles[0].role;
+        const executionDelay = 0;
+
+        await accessManager.connect(owner).grantRole(roleId, user.address, executionDelay);
+
+        const assignedRoles = await accessManager.getRolesOf(user.address);
+        expect(assignedRoles.map(r => r.toString())).to.include(roleId.toString());
+    });
+
+    it("should return role selectors for a registered contract (authorized)", async function () {
+        const [, address] = await ethers.getSigners();
+        await accessManager.connect(owner).registerContract(
+            "MockResource",
+            await address.getAddress()
+        );
+
+        const roleSelectors = await accessManager.connect(owner).initRoleSelectors(
+            await address.getAddress()
+        );
+
+        await roleSelectors.wait();
+
+        const roles = await accessManager.getRoles();
+
+        for (const role of roles) {
+            const roleId = role.role;
+            const selectors = role.selectors;
+
+            for (const selector of selectors) {
+                const assigned = await accessManager.getTargetFunctionRole(
+                    await address.getAddress(),
+                    selector
+                );
+                expect(assigned).to.equal(roleId);
+            }
+        }
+    });
+
+    it("should revoke a role from an account", async function () {
+        const [, user] = await ethers.getSigners();
+
+        const roles = await accessManager.getRoles();
+        const testRoleId = roles[0].role;
+
+        await accessManager.connect(owner).grantRole(testRoleId, user.address, 0);
+
+        const rolesOfBefore = await accessManager.getRolesOf(user.address);
+        const hasRoleBefore = rolesOfBefore.map(r => r.toString()).includes(testRoleId.toString());
+        expect(hasRoleBefore).to.be.true;
+
+        await accessManager.connect(owner).revokeRole(testRoleId, user.address);
+
+        const rolesOfAfter = await accessManager.getRolesOf(user.address);
+        const hasRoleAfter = rolesOfAfter.map(r => r.toString()).includes(testRoleId.toString());
+        expect(hasRoleAfter).to.be.false;
     });
 });
