@@ -9,5 +9,10 @@ export async function deployAuctionLot(accessManager: AccessManager): Promise<Au
 
     await auctionLot.waitForDeployment();
 
+    const auctionLotAddress = await auctionLot.getAddress();
+
+    await accessManager.initRoleSelectors(auctionLotAddress);
+    await accessManager.registerContract('AuctionLot', auctionLotAddress);
+
     return auctionLot;
 }

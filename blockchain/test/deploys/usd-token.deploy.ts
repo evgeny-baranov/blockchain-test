@@ -8,6 +8,11 @@ export async function deployUsdToken(
     const usdToken = await upgrades.deployProxy(factory, [await accessManager.getAddress()], {
         initializer: "initialize",
     });
-    await usdToken.waitForDeployment();
+
+    const usdTokenAddress = await usdToken.getAddress();
+
+    await accessManager.initRoleSelectors(usdToken);
+    await accessManager.registerContract('UsdToken', usdTokenAddress);
+
     return usdToken;
 }

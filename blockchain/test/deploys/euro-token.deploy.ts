@@ -8,6 +8,13 @@ export async function deployEuroToken(
     const euroToken = await upgrades.deployProxy(factory, [await accessManager.getAddress()], {
         initializer: "initialize",
     });
+
     await euroToken.waitForDeployment();
+
+    const euroTokenAddress = await euroToken.getAddress();
+
+    await accessManager.initRoleSelectors(euroToken);
+    await accessManager.registerContract('EuroToken', euroTokenAddress);
+
     return euroToken;
 }

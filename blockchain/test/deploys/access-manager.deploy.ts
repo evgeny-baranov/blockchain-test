@@ -7,6 +7,7 @@ export async function deployAccessManager(owner: HardhatEthersSigner): Promise<A
     const accessManager = await upgrades.deployProxy(AccessManager, [owner.address], {
         initializer: "initialize",
     });
+
     await accessManager.waitForDeployment();
 
     return accessManager;
