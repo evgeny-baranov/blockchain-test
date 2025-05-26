@@ -11,6 +11,7 @@ export async function deployAuction(accessManager: AccessManager): Promise<Aucti
 
     await auction.waitForDeployment();
     const auctionAddress = await auction.getAddress();
+    await accessManager.initRoleSelectors(auctionAddress);
     await accessManager.connect(owner).registerContract('Auction', auctionAddress);
 
     await accessManager.connect(owner).grantRole(
