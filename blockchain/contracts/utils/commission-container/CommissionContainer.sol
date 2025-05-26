@@ -45,7 +45,6 @@ abstract contract CommissionContainer is Initializable, ICommissionContainer {
     {
         CommissionContainerStorage.Layout storage $ = CommissionContainerStorage.layout();
 
-        uint256 before = $.accumulatedCommissions[creditAsset];
         $.accumulatedCommissions[creditAsset] += amount;
 
         emit CommissionCredited(creditAsset, amount);
@@ -140,7 +139,6 @@ abstract contract CommissionContainer is Initializable, ICommissionContainer {
             string memory symbol = "";
             uint8 decimals = 0;
 
-            // Безопасные вызовы
             try meta.name() returns (string memory n) {
                 name = n;
             } catch {}

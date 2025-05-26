@@ -4,4 +4,5 @@ export const Roles = {
     MINTER_ROLE: 2n,
     BURNER_ROLE: 3n,
     ACCOUNTANT_ROLE: 4n,
+    CUSTODIAN_ROLE: 5n,
 } as const;

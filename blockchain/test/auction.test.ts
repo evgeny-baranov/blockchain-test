@@ -1,0 +1,229 @@
+import {expect} from "chai";
+import "@nomicfoundation/hardhat-chai-matchers";
+import {ethers} from "hardhat";
+import {deployAccessManager} from "./deploys/access-manager.deploy";
+import {AccessManager, Auction, AuctionLot, UsdToken} from "../typechain-types";
+import {HardhatEthersSigner} from "@nomicfoundation/hardhat-ethers/signers";
+import {deployAuction} from "./deploys/auction.deploy";
+import {deployAuctionLot} from "./deploys/auction-lot.deploy";
+import {deployUsdToken} from "./deploys/usd-token.deploy";
+import {Roles} from "../app/roles.type";
+
+describe("Auction contract test", function () {
+    let accessManager: AccessManager;
+    let auctionLot: AuctionLot;
+    let auction: Auction;
+    let usdToken: UsdToken;
+    let owner: HardhatEthersSigner;
+    let minter: HardhatEthersSigner;
+    let burner: HardhatEthersSigner;
+    let custodian: HardhatEthersSigner;
+    let bidder1: HardhatEthersSigner;
+    let bidder2: HardhatEthersSigner;
+
+    beforeEach(async () => {
+        [owner, minter, burner, custodian, bidder1, bidder2] = await ethers.getSigners();
+
+        accessManager = await deployAccessManager(owner);
+        auctionLot = await deployAuctionLot(accessManager);
+        auction = await deployAuction(accessManager);
+        usdToken = await deployUsdToken(accessManager);
+
+        await accessManager.grantRole(Roles.MINTER_ROLE, minter.address, 0);
+        await accessManager.grantRole(Roles.BURNER_ROLE, burner.address, 0);
+        await accessManager.grantRole(Roles.CUSTODIAN_ROLE, custodian.address, 0);
+    });
+
+    async function createAuctionLot(uri: string) {
+        const tx = await auction.createAuctionLot(uri);
+        const receipt = await tx.wait();
+
+        const event = receipt?.logs
+            .map(log => auctionLot.interface.parseLog(log))
+            .find(log => log?.name === "Transfer");
+
+        return event?.args?.tokenId;
+    }
+
+    async function startAuction(tokenId, creditStartAmount, creditEndAmount) {
+        const abiCoder = ethers.AbiCoder.defaultAbiCoder();
+        const auctionData = abiCoder.encode(
+            [
+                "tuple(address creditAsset, uint256 creditStartAmount, uint256 creditEndAmount, uint256 bidIncrement, uint48 startTime, uint48 duration, uint48 claimDelay)"
+            ],
+            [[
+                await usdToken.getAddress(),
+                creditStartAmount,
+                creditEndAmount,
+                50,
+                0,
+                3600,
+                600
+            ]]
+        );
+
+        await auctionLot["safeTransferFrom(address,address,uint256,bytes)"](
+            await owner.getAddress(),
+            await auction.getAddress(),
+            tokenId,
+            auctionData
+        );
+    }
+
+    it("should create auction lot", async function () {
+        const uri = "test-uri";
+        const tokenId = await createAuctionLot(uri);
+        expect(tokenId).to.not.be.undefined;
+
+        const tokenUri = await auctionLot.tokenURI(tokenId);
+        const ownerOfToken = await auctionLot.ownerOf(tokenId);
+
+        expect(tokenUri).to.equal(`ipfs://baranov.eu/${uri}`);
+        expect(ownerOfToken).to.equal(await owner.getAddress());
+    });
+
+    it("should create auction if token transferred to contract with attached data", async function () {
+        const tokenId = await createAuctionLot("test-uri");
+        await startAuction(tokenId, 100, 50);
+
+        const auctions = await auction.getAuctionsBySeller(await owner.getAddress());
+
+        expect(auctions.length).to.equal(1);
+        expect(auctions[0].debitAssetId).to.equal(tokenId);
+        expect(auctions[0].seller).to.equal(await owner.getAddress());
+        expect(auctions[0].creditStartAmount).to.equal(100);
+    });
+
+    it("should allow user to bid on an active auction", async function () {
+        const tokenId = await createAuctionLot("test-uri");
+        await startAuction(tokenId, 500, 5000);
+
+        // Send USD tokens to bidder and approve Auction contract
+        await usdToken.connect(minter).mintTo(bidder1.address, 1000);
+        await usdToken.connect(bidder1).approve(await auction.getAddress(), 1000);
+
+        // Get auction ID
+        const auctions = await auction.getAuctionsBySeller(owner.address);
+        const auctionId = auctions[0].auctionId;
+
+        // Place bid
+        await expect(
+            auction.connect(bidder1).placeBid(auctionId, 600)
+        ).to.emit(auction, "AuctionBid");
+
+        const updatedAuction = await auction.getAuction(auctionId);
+        expect(updatedAuction.highestBidder).to.equal(await bidder1.getAddress());
+        expect(updatedAuction.highestBid).to.equal(600);
+    });
+
+    it("should return the winning bid", async function () {
+        const uri = "test-uri";
+        const tokenId = await createAuctionLot(uri);
+
+        // Get auction ID
+        await startAuction(tokenId, 1000, 2500);
+        const auctions = await auction.getAuctionsBySeller(owner.address);
+        const auctionId = auctions[0].auctionId;
+
+        // Send USD tokens to bidder and approve Auction contract
+        await usdToken.connect(minter).mintTo(bidder1.address, 2000);
+        await usdToken.connect(minter).mintTo(bidder2.address, 3000);
+
+        await usdToken.connect(bidder1).approve(await auction.getAddress(), 1500);
+        await usdToken.connect(bidder2).approve(await auction.getAddress(), 2500);
+
+        await expect(
+            await auction.connect(bidder1).placeBid(auctionId, 1500)
+        ).to.emit(auction, "AuctionBid").withArgs(auctionId, bidder1.address, 1500);
+
+        await expect(
+            await auction.connect(bidder2).placeBid(auctionId, 2500)
+        ).to.emit(auction, "AuctionBid").withArgs(auctionId, bidder2.address, 2500);
+
+        // Fast-forward time to end auction
+        await ethers.provider.send("evm_increaseTime", [3600]);
+        await ethers.provider.send("evm_mine", []);
+
+        const winnerBid = await auction.getWinningBid(auctionId);
+
+        expect(winnerBid.bidder).to.equal(bidder2.address);
+        expect(winnerBid.amount).to.equal(2500);
+    });
+
+    it("should allow authorized account to cancel auction", async function () {
+        const tokenId = await createAuctionLot("test-uri");
+        await startAuction(tokenId, 500, 5000);
+
+        // Get auction ID
+        const auctions = await auction.getAuctionsBySeller(owner.address);
+        const auctionId = auctions[0].auctionId;
+
+        await usdToken.connect(minter).mintTo(bidder1.address, 1000);
+        await usdToken.connect(minter).mintTo(bidder2.address, 1000);
+
+        await usdToken.connect(bidder1).approve(await auction.getAddress(), 1000);
+        await usdToken.connect(bidder2).approve(await auction.getAddress(), 1000);
+
+        await auction.connect(bidder1).placeBid(auctionId, 500);
+        await auction.connect(bidder2).placeBid(auctionId, 600);
+
+        const balanceBefore1 = await usdToken.balanceOf(bidder1.address);
+        const balanceBefore2 = await usdToken.balanceOf(bidder2.address);
+
+        await expect(
+            await auction.connect(custodian).cancelAuction(auctionId)
+        ).to.emit(
+            auction,
+            "AuctionCancelled"
+        ).withArgs(auctionId, owner.address);
+
+        const auctionInfo = await auction.getAuction(auctionId);
+        expect(
+            auctionInfo.closeTime
+        ).to.be.gt(0);
+
+        expect(
+            await usdToken.balanceOf(bidder1.address)
+        ).to.equal(balanceBefore1 + 500n);
+
+        expect(
+            await usdToken.balanceOf(bidder2.address)
+        ).to.equal(balanceBefore2 + 600n);
+    });
+
+    it("should finalise auction and emit AuctionFinalised event", async function () {
+        const tokenId = await createAuctionLot("test-uri");
+
+        const creditStartAmount = 100;
+        const creditEndAmount = 200;
+
+        await startAuction(tokenId, creditStartAmount, creditEndAmount);
+        // Get auction ID
+        const auctions = await auction.getAuctionsBySeller(owner.address);
+        const auctionId = auctions[0].auctionId;
+
+        await usdToken.connect(minter).mintTo(bidder1.address, 150);
+        await usdToken.connect(bidder1).approve(await auction.getAddress(), 150);
+
+        // place bid
+        await auction.connect(bidder1).placeBid(auctionId, 150);
+
+        // Fast-forward time to end auction
+        await ethers.provider.send("evm_increaseTime", [3600 + 600 + 1]);
+        await ethers.provider.send("evm_mine", []);
+
+        const tx = await auction.connect(custodian).finaliseAuction(auctionId);
+        const receipt = await tx.wait();
+
+        const event = receipt?.logs
+            .map(log => auction.interface.parseLog(log))
+            .find(log => log?.name === "AuctionClaimed");
+
+        expect(event).to.not.be.undefined;
+        expect(event?.args?.auctionId).to.equal(auctionId);
+        expect(event?.args?.seller).to.equal(owner.address);
+
+        const newOwner = await auctionLot.ownerOf(tokenId);
+        expect(newOwner).to.equal(bidder1.address);
+    });
+});

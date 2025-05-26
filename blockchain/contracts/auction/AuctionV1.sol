@@ -220,6 +220,7 @@ ReentrancyGuardUpgradeable
             $.biddersList[auctionId].push(_msgSender());
         }
 
+        currentBid.bidder = _msgSender();
         currentBid.amount = bidAmount;
         currentBid.timestamp = uint48(block.timestamp);
         auction.highestBid = bidAmount;
@@ -232,7 +233,6 @@ ReentrancyGuardUpgradeable
             emit AuctionClose(auctionId, _msgSender(), bidAmount);
         }
     }
-
 
     function placeBid(uint256 auctionId, uint256 bidAmount) external nonReentrant {
         _placeBid(auctionId, bidAmount);

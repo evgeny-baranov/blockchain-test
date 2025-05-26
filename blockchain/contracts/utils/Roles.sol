@@ -24,15 +24,17 @@ library Roles {
     string public constant MINTER_ROLE_LABEL = "MINTER";
     string public constant BURNER_ROLE_LABEL = "BURNER";
     string public constant ACCOUNTANT_ROLE_LABEL = "ACCOUNTANT";
+    string public constant CUSTODIAN_ROLE_LABEL = "CUSTODIAN";
 
     uint64 public constant ADMIN_ROLE = 0;
     uint64 public constant UPGRADE_ROLE = 1;
     uint64 public constant MINTER_ROLE = 2;
     uint64 public constant BURNER_ROLE = 3;
     uint64 public constant ACCOUNTANT_ROLE = 4;
+    uint64 public constant CUSTODIAN_ROLE = 5;
 
     function getRolesWithSelectors() internal pure returns (RoleSelectors[] memory) {
-        RoleSelectors[] memory roleSelectors = new RoleSelectors[](5);
+        RoleSelectors[] memory roleSelectors = new RoleSelectors[](6);
 
         roleSelectors[0] = RoleSelectors({
             label: BURNER_ROLE_LABEL,
@@ -64,7 +66,28 @@ library Roles {
             selectors: new bytes4[](0)
         });
 
+        roleSelectors[5] = RoleSelectors({
+            label: CUSTODIAN_ROLE_LABEL,
+            role: CUSTODIAN_ROLE,
+            selectors: getCustodianSelectors()
+        });
+
         return roleSelectors;
+    }
+
+    function getCustodianSelectors() internal pure returns (bytes4[] memory) {
+        bytes4[3] memory temporary = [
+                            IAuctionLot.setBaseURI.selector,
+                            Auction.cancelAuction.selector,
+                            Auction.finaliseAuction.selector
+            ];
+
+        bytes4[] memory selectors = new bytes4[](temporary.length);
+        for (uint i = 0; i < temporary.length; i++) {
+            selectors[i] = temporary[i];
+        }
+
+        return selectors;
     }
 
     function getBurnSelectors() internal pure returns (bytes4[] memory) {

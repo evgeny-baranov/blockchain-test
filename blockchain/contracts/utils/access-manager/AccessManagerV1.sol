@@ -38,7 +38,7 @@ UUPSUpgradeable
 
     }
 
-    function _initRoleSelectors(address resource) internal returns (Roles.RoleSelectors[] memory) {
+    function _initRoleSelectors(address resource) internal {
         Roles.RoleSelectors[] memory roles = this.getRoles();
 
         for (uint256 i = 0; i < roles.length; i++) {
@@ -49,12 +49,10 @@ UUPSUpgradeable
                 _setTargetFunctionRole(resource, selectors[s], roleId);
             }
         }
-
-        return roles;
     }
 
-    function initRoleSelectors(address resource) external onlyAuthorized returns (Roles.RoleSelectors[] memory) {
-        return _initRoleSelectors(resource);
+    function initRoleSelectors(address resource) external onlyAuthorized  {
+        _initRoleSelectors(resource);
     }
 
     function registerContract(string memory name, address contractAddress) public onlyAuthorized {
