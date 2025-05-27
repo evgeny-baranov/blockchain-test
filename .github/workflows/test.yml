@@ -1,0 +1,33 @@
+name: Run Hardhat Tests in Docker
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      docker:
+        image: docker:20.10.16-dind
+        options: --privileged
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Docker Compose
+        run: |
+          docker-compose -f docker-compose.yaml up -d blockchain
+          sleep 10  # Wait for Hardhat node to fully initialize
+
+      - name: Run tests in blockchain container
+        run: |
+          docker-compose exec -T blockchain bash -c "npm ci && npx hardhat compile && npx hardhat test"
+
+      - name: Shut down containers
+        if: always()
+        run: docker-compose -f docker-compose.yaml down
