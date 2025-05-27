@@ -10,5 +10,5 @@ import {Roles} from "../Roles.sol";
 interface IAccessManagerV1 is IVersion, IRegistry, IAccessManager {
     function getRoles() external pure returns (Roles.RoleSelectors[] memory);
 
-    function initRoleSelectors(address resource) external returns (Roles.RoleSelectors[] memory);
+    function initRoleSelectors(address resource) external;
 }

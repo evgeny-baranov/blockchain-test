@@ -51,7 +51,7 @@ UUPSUpgradeable
         }
     }
 
-    function initRoleSelectors(address resource) external onlyAuthorized  {
+    function initRoleSelectors(address resource) external onlyAuthorized {
         _initRoleSelectors(resource);
     }
 
