@@ -11,24 +11,19 @@ jobs:
   test:
     runs-on: ubuntu-latest
 
-    services:
-      docker:
-        image: docker:20.10.16-dind
-        options: --privileged
-
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      - name: Set up Docker Compose
+      - name: Set up and run blockchain container
         run: |
-          docker-compose -f docker-compose.yaml up -d blockchain
-          sleep 10  # Wait for Hardhat node to fully initialize
+          docker compose -f docker-compose.yaml up -d blockchain
+          sleep 10
 
       - name: Run tests in blockchain container
         run: |
-          docker-compose exec -T blockchain bash -c "npm ci && npx hardhat compile && npx hardhat test"
+          docker compose exec -T blockchain bash -c "npm ci && npx hardhat compile && npx hardhat test"
 
       - name: Shut down containers
         if: always()
-        run: docker-compose -f docker-compose.yaml down
+        run: docker compose -f docker-compose.yaml down
