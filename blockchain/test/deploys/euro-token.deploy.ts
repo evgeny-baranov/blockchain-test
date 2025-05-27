@@ -1,5 +1,5 @@
 import {ethers, upgrades} from "hardhat";
-import {EuroToken, AccessManager} from "../../typechain-types";
+import {AccessManager, EuroToken} from "../../typechain";
 
 export async function deployEuroToken(
     accessManager: AccessManager

@@ -1,5 +1,5 @@
 import {ethers, upgrades} from "hardhat";
-import {AccessManager, AuctionLot} from "../../typechain-types";
+import {AccessManager, AuctionLot} from "../../typechain";
 
 export async function deployAuctionLot(accessManager: AccessManager): Promise<AuctionLot> {
     const factory = await ethers.getContractFactory("AuctionLotV1");

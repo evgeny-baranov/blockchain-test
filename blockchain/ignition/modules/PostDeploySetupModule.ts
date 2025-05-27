@@ -1,5 +1,6 @@
 import {buildModule} from "@nomicfoundation/hardhat-ignition/modules";
 import DeployAllModule from "./DeployAllModule";
+import {NamedArtifactContractDeploymentFuture} from "@nomicfoundation/ignition-core/dist/src/types/module";
 
 export default buildModule("PostDeploySetupModule", (builder) => {
 
@@ -9,52 +10,26 @@ export default buildModule("PostDeploySetupModule", (builder) => {
 
     const accessManagerImplementation = builder.contractAt(
         "AccessManager",
-        accessManager
+        accessManager,
     );
 
-    // initRoleSelectors
-    builder.call(accessManagerImplementation, "initRoleSelectors", [euroToken], {
-        id: "initRoleSelectorsEuroToken",
-        from: owner,
-    });
-    builder.call(accessManagerImplementation, "initRoleSelectors", [usdToken], {
-        id: "initRoleSelectorsUsdToken",
-        from: owner,
-    });
-    builder.call(accessManagerImplementation, "initRoleSelectors", [auctionLot], {
-        id: "initRoleSelectorsAuctionLot",
-        from: owner,
-    });
-    builder.call(accessManagerImplementation, "initRoleSelectors", [auction], {
-        id: "initRoleSelectorsAuction",
-        from: owner,
-    });
-    builder.call(accessManagerImplementation, "initRoleSelectors", [accounting], {
-        id: "initRoleSelectorsAccounting",
-        from: owner,
-    });
+    function initRoleFor(target: NamedArtifactContractDeploymentFuture<any>, label: string) {
+        builder.call(accessManagerImplementation, "initRoleSelectors", [target], {
+            id: `initRoleSelectors_${label}`,
+            from: owner,
+        });
 
-    // registerContract
-    builder.call(accessManagerImplementation, "registerContract", ["AuctionLot", auctionLot], {
-        id: "registerAuctionLot",
-        from: owner
-    });
-    builder.call(accessManagerImplementation, "registerContract", ["Auction", auction], {
-        id: "registerAuction",
-        from: owner,
-    });
-    builder.call(accessManagerImplementation, "registerContract", ["EuroToken", euroToken], {
-        id: "registerEuroToken",
-        from: owner
-    });
-    builder.call(accessManagerImplementation, "registerContract", ["UsdToken", usdToken], {
-        id: "registerUsdToken",
-        from: owner
-    });
-    builder.call(accessManagerImplementation, "registerContract", ["Accounting", accounting], {
-        id: "registerAccounting",
-        from: owner
-    });
+        builder.call(accessManagerImplementation, "registerContract", [label, auctionLot], {
+            id: `registerContract_${label}`,
+            from: owner
+        });
+    }
+
+    initRoleFor(euroToken, 'EuroToken');
+    initRoleFor(usdToken, 'UsdToken');
+    initRoleFor(auctionLot, 'AuctionLot');
+    initRoleFor(auction, 'Auction');
+    initRoleFor(accounting, 'Accounting');
 
     return {};
 });

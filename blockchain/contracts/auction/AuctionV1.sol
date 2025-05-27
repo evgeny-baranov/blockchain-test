@@ -1,21 +1,23 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
 
-import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
-import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
-import "@openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol";
-import "@openzeppelin/contracts/utils/types/Time.sol";
-import {AccessManager} from "../AccessManager.sol";
+import {AccessManagedUpgradeable} from "@openzeppelin/contracts-upgradeable/access/manager/AccessManagedUpgradeable.sol";
 import {AuctionLot} from "../AuctionLot.sol";
-import {CommissionContainer} from "../utils/commission-container/CommissionContainer.sol";
-import {ICommissionContainer} from "../utils/commission-container/ICommissionContainer.sol";
-import {IRegistry} from "../utils/access-manager/IRegistry.sol";
-import {Version} from "../utils/version/Version.sol";
-import {Auction} from "../Auction.sol";
 import {AuctionStorage} from "./AuctionStorage.sol";
+import {Auction} from "../Auction.sol";
+import {CommissionContainer} from "../utils/commission-container/CommissionContainer.sol";
+import {ERC721Holder} from "@openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol";
+import {IAuctionStorage} from "./IAuctionStorage.sol";
+import {ICommissionContainer} from "../utils/commission-container/ICommissionContainer.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {IERC721Receiver} from "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
+import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import {IRegistry} from "../utils/access-manager/IRegistry.sol";
+import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
+import {Time} from "@openzeppelin/contracts/utils/types/Time.sol";
+import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import {Version} from "../utils/version/Version.sol";
 import {ViewAccessManagedUpgradeable} from "../utils/ViewAccessManagedUpgradeable.sol";
 
 contract AuctionV1 is
@@ -118,6 +120,10 @@ ReentrancyGuardUpgradeable
             claimDelay: auctionData.claimDelay,
             claimed: false
         });
+
+        if (!_isCommissionTokenAllowed(poolData.creditAsset)) {
+            revert CreditAssetNotAllowed(poolData.creditAsset);
+        }
 
         $.auctions[auctionId] = poolData;
         $.sellerAuctions[from].push(auctionId);
@@ -236,6 +242,21 @@ ReentrancyGuardUpgradeable
 
     function placeBid(uint256 auctionId, uint256 bidAmount) external nonReentrant {
         _placeBid(auctionId, bidAmount);
+    }
+
+    function getBids(uint256 auctionId)
+    isAuctionExist(auctionId)
+    external view returns (Bid[] memory)
+    {
+        AuctionStorage.Layout storage $ = AuctionStorage.layout();
+        address[] storage bidders = $.biddersList[auctionId];
+        Bid[] memory result = new Bid[](bidders.length);
+
+        for (uint256 i = 0; i < bidders.length; i++) {
+            result[i] = $.bidsByAuction[auctionId][bidders[i]];
+        }
+
+        return result;
     }
 
     function finaliseAuction(uint256 auctionId) external restricted
@@ -376,6 +397,7 @@ ReentrancyGuardUpgradeable
 
     function withdrawCommission(address creditAsset, address to) external
     restricted
+    onlyAllowedToken(creditAsset)
     {
         _withdrawCommission(creditAsset, to);
     }
@@ -396,6 +418,7 @@ ReentrancyGuardUpgradeable
 
     function commissionAmount(address creditAsset) external view
     restrictedView
+    onlyAllowedToken(creditAsset)
     returns (uint256) {
         return _commissionAmount(creditAsset);
     }

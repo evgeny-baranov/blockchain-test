@@ -3,10 +3,7 @@ import "@nomicfoundation/hardhat-chai-matchers";
 import {deployAuctionLot} from "./deploys/auction-lot.deploy";
 import {ethers} from "hardhat";
 
-import {
-    AccessManager,
-    AuctionLot,
-} from "../typechain-types";
+import {AccessManager, AuctionLot,} from "../typechain";
 import {deployAccessManager} from "./deploys/access-manager.deploy";
 import {HardhatEthersSigner} from "@nomicfoundation/hardhat-ethers/signers";
 import {Roles} from "../app/roles.type";
@@ -18,16 +15,18 @@ describe("AuctionLotV1", function () {
     let minter: HardhatEthersSigner;
     let burner: HardhatEthersSigner;
     let custodian: HardhatEthersSigner;
+    let accountant: HardhatEthersSigner;
     let unauthorized: HardhatEthersSigner;
 
     beforeEach(async () => {
-        [owner, minter, burner, custodian, unauthorized] = await ethers.getSigners();
+        [owner, minter, burner, custodian, accountant, unauthorized] = await ethers.getSigners();
 
         accessManager = await deployAccessManager(owner);
         auctionLot = await deployAuctionLot(accessManager);
 
         await accessManager.grantRole(Roles.MINTER_ROLE, minter.address, 0);
         await accessManager.grantRole(Roles.BURNER_ROLE, burner.address, 0);
+        await accessManager.grantRole(Roles.ACCOUNTANT_ROLE, accountant.address, 0);
         await accessManager.grantRole(Roles.CUSTODIAN_ROLE, custodian.address, 0);
     });
 
@@ -41,7 +40,7 @@ describe("AuctionLotV1", function () {
 
         const receipt = await tx.wait();
 
-        const event = receipt.logs
+        const event = receipt?.logs
             .map(log => {
                 try {
                     return auctionLot.interface.parseLog(log);
@@ -61,7 +60,7 @@ describe("AuctionLotV1", function () {
         const tx = await auctionLot.connect(minter).mint(owner.address, "to-burn");
         const receipt = await tx.wait();
 
-        const event = receipt.logs
+        const event = receipt?.logs
             .map(log => {
                 try {
                     return auctionLot.interface.parseLog(log);
@@ -111,7 +110,7 @@ describe("AuctionLotV1", function () {
         for (let i = 0; i < 3; i++) {
             const tx = await auctionLot.connect(minter).mint(owner.address, `uri-${i}`);
             const receipt = await tx.wait();
-            const event = receipt.logs
+            const event = receipt?.logs
                 .map(log => {
                     try {
                         return auctionLot.interface.parseLog(log);
@@ -141,7 +140,7 @@ describe("AuctionLotV1", function () {
         const tx = await auctionLot.connect(minter).mint(owner.address, "to-burn");
         const receipt = await tx.wait();
 
-        const event = receipt.logs
+        const event = receipt?.logs
             .map(log => {
                 try {
                     return auctionLot.interface.parseLog(log);

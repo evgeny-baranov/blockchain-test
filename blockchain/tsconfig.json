@@ -14,12 +14,14 @@
     ],
     "paths": {
       "@blockchain/*": [
-        "./typechain-types/*"
+        "./typechain/*"
       ]
     }
   },
   "include": [
-    "typechain-types/**/*"
+    "typechain/**/*",
+    "test/**/*",
+    "app/**/*"
   ],
   "files": ["./hardhat.config.ts"]
 }

@@ -2,7 +2,7 @@ import {expect} from "chai";
 import "@nomicfoundation/hardhat-chai-matchers";
 import {deployAccessManager} from "./deploys/access-manager.deploy";
 import {ethers} from "hardhat";
-import {AccessManager, UsdToken} from "../typechain-types";
+import {AccessManager, UsdToken} from "../typechain";
 import {deployUsdToken} from "./deploys/usd-token.deploy";
 import {Roles} from "../app/roles.type";
 import {HardhatEthersSigner} from "@nomicfoundation/hardhat-ethers/signers";

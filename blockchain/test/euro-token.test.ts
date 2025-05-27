@@ -3,7 +3,7 @@ import "@nomicfoundation/hardhat-chai-matchers";
 import {deployEuroToken} from "./deploys/euro-token.deploy";
 import {deployAccessManager} from "./deploys/access-manager.deploy";
 import {ethers} from "hardhat";
-import {EuroToken, AccessManager} from "../typechain-types";
+import {AccessManager, EuroToken} from "../typechain";
 import {HardhatEthersSigner} from "@nomicfoundation/hardhat-ethers/signers";
 import {Roles} from "../app/roles.type";
 
