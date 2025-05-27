@@ -16,6 +16,8 @@ compile:
 	npx hardhat compile
 test:
 	REPORT_GAS=true npx hardhat test
+coverage:
+	REPORT_GAS=true npx hardhat coverage
 ignition:
 	npx hardhat ignition deploy ./ignition/modules/DeployAllModule.ts --network $(NETWORK)
 	npx hardhat ignition deploy ./ignition/modules/PostDeploySetupModule.ts --network $(NETWORK)
@@ -25,4 +27,4 @@ ignition-test:
 build:
 	npm run build
 
-.PHONY: install clean node compile test ignition ignition-test build
+.PHONY: install clean node compile test ignition ignition-test build coverage

@@ -45,7 +45,6 @@ abstract contract CommissionContainer is Initializable, ICommissionContainer {
     {
         CommissionContainerStorage.Layout storage $ = CommissionContainerStorage.layout();
 
-        uint256 before = $.accumulatedCommissions[creditAsset];
         $.accumulatedCommissions[creditAsset] += amount;
 
         emit CommissionCredited(creditAsset, amount);
@@ -67,7 +66,9 @@ abstract contract CommissionContainer is Initializable, ICommissionContainer {
     returns (uint256)
     {
         CommissionContainerStorage.Layout storage $ = CommissionContainerStorage.layout();
+
         uint256 amount = $.accumulatedCommissions[creditAsset];
+
         return amount;
     }
 
@@ -106,10 +107,14 @@ abstract contract CommissionContainer is Initializable, ICommissionContainer {
         emit CommissionTokenRemoved(creditAsset);
     }
 
-    modifier onlyAllowedToken(address creditAsset) {
+    function _isCommissionTokenAllowed(address creditAsset) internal view returns (bool) {
         CommissionContainerStorage.Layout storage $ = CommissionContainerStorage.layout();
 
-        if (!$.allowedTokens[creditAsset]) {
+        return $.allowedTokens[creditAsset];
+    }
+
+    modifier onlyAllowedToken(address creditAsset) {
+        if (!_isCommissionTokenAllowed(creditAsset)) {
             revert CreditAssetNotAllowed(creditAsset);
         }
 
@@ -117,9 +122,7 @@ abstract contract CommissionContainer is Initializable, ICommissionContainer {
     }
 
     modifier onlyNotAllowedToken(address creditAsset) {
-        CommissionContainerStorage.Layout storage $ = CommissionContainerStorage.layout();
-
-        if ($.allowedTokens[creditAsset]) {
+        if (_isCommissionTokenAllowed(creditAsset)) {
             revert TokenAlreadyAllowed(creditAsset);
         }
 
@@ -140,7 +143,6 @@ abstract contract CommissionContainer is Initializable, ICommissionContainer {
             string memory symbol = "";
             uint8 decimals = 0;
 
-            // Безопасные вызовы
             try meta.name() returns (string memory n) {
                 name = n;
             } catch {}

@@ -1,6 +1,6 @@
 import {buildModule} from "@nomicfoundation/hardhat-ignition/modules";
 import DeployAllModule from "./DeployAllModule";
-import {Roles} from "./roles.type";
+import {Roles} from "../../app/roles.type";
 
 export default buildModule("PostDeployTestSetupModule", (builder) => {
 

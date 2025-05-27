@@ -1,18 +1,16 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.28;
 
-import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721BurnableUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721PausableUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721URIStorageUpgradeable.sol";
-import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Burnable.sol";
-import "@openzeppelin/contracts/utils/introspection/ERC165.sol";
 import {AccessManager} from "../../AccessManager.sol";
+import {ERC721BurnableUpgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721BurnableUpgradeable.sol";
+import {ERC721EnumerableUpgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol";
+import {ERC721PausableUpgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721PausableUpgradeable.sol";
+import {ERC721URIStorageUpgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721URIStorageUpgradeable.sol";
+import {ERC721Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol";
+import {IAuctionLot} from "./IAuctionLot.sol";
+import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import {Version} from "../../utils/version/Version.sol";
 import {ViewAccessManagedUpgradeable} from "../../utils/ViewAccessManagedUpgradeable.sol";
-import {IAuctionLot} from "./IAuctionLot.sol";
 
 /// @custom:security-contact info@baranov.eu
 contract AuctionLotV1 is
@@ -26,6 +24,7 @@ UUPSUpgradeable,
 IAuctionLot
 {
     uint256 private _nextTokenId;
+    string private _baseUri;
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -53,6 +52,7 @@ IAuctionLot
         require(initialAuthority != address(0), "Invalid authority address");
 
         _nextTokenId = 1;
+        _baseUri = "ipfs://baranov.eu/";
 
         __ERC721_init("AuctionLot", "AULOT");
         __ERC721Enumerable_init();
@@ -63,8 +63,8 @@ IAuctionLot
         __UUPSUpgradeable_init();
     }
 
-    function _baseURI() internal pure override returns (string memory) {
-        return "https://baranov.eu/nft/";
+    function _baseURI() internal view override returns (string memory) {
+        return _baseUri;
     }
 
     function pause() public restricted {
@@ -114,5 +114,9 @@ IAuctionLot
             tokenIds[i] = tokenOfOwnerByIndex(owner, i);
         }
         return tokenIds;
+    }
+
+    function setBaseURI(string memory newBaseUri) external restricted {
+        _baseUri = newBaseUri;
     }
 }

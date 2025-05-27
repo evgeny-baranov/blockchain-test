@@ -1,10 +1,14 @@
-import {HardhatUserConfig} from "hardhat/config";
-import "@nomicfoundation/hardhat-toolbox";
 import "@openzeppelin/hardhat-upgrades";
+import "@nomicfoundation/hardhat-toolbox";
+import "solidity-coverage";
+import {HardhatUserConfig} from "hardhat/config";
 
 const config: HardhatUserConfig = {
     defaultNetwork: "hardhat",
-
+    typechain: {
+        outDir: "typechain",
+        target: "ethers-v6",
+    },
     solidity: {
         version: "0.8.28",
         settings: {

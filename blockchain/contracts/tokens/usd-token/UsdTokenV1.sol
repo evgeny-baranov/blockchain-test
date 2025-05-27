@@ -28,10 +28,6 @@ UsdToken
         __UUPSUpgradeable_init();
     }
 
-    function grantRole(address account, uint64 roleId) external restricted {
-        AccessManager(authority()).grantRole(roleId, account, 0);
-    }
-
     function mint(uint256 amount) public restricted {
         _mint(_msgSender(), amount);
     }

@@ -1,15 +1,17 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.28;
 
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/access/manager/AccessManagerUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
-import {Registry} from "./Registry.sol";
 import {Roles} from "../Roles.sol";
 import {Version} from "../version/Version.sol";
+import {IAccessManagerV1} from "./IAccessManagerV1.sol";
+import {Registry} from "./Registry.sol";
+import {AccessManagerUpgradeable} from "@openzeppelin/contracts-upgradeable/access/manager/AccessManagerUpgradeable.sol";
+import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
 /// @custom:security-contact info@baranov.eu
 contract AccessManagerV1 is
+IAccessManagerV1,
 Version,
 Registry,
 AccessManagerUpgradeable,
@@ -38,7 +40,7 @@ UUPSUpgradeable
 
     }
 
-    function _initRoleSelectors(address resource) internal returns (Roles.RoleSelectors[] memory) {
+    function _initRoleSelectors(address resource) internal {
         Roles.RoleSelectors[] memory roles = this.getRoles();
 
         for (uint256 i = 0; i < roles.length; i++) {
@@ -49,12 +51,10 @@ UUPSUpgradeable
                 _setTargetFunctionRole(resource, selectors[s], roleId);
             }
         }
-
-        return roles;
     }
 
-    function initRoleSelectors(address resource) external onlyAuthorized returns (Roles.RoleSelectors[] memory) {
-        return _initRoleSelectors(resource);
+    function initRoleSelectors(address resource) external onlyAuthorized {
+        _initRoleSelectors(resource);
     }
 
     function registerContract(string memory name, address contractAddress) public onlyAuthorized {

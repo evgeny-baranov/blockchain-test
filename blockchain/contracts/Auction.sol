@@ -53,5 +53,7 @@ interface Auction is IVersion, ICommissionContainer, IAuctionStorage, IERC721Rec
 
     function getWinningBid(uint256 auctionId) external view returns (Bid memory winnerBid);
 
+    function getBids(uint256 auctionId) external view returns (Bid[] memory);
+
     function withdraw() external;
 }
