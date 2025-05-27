@@ -15,7 +15,8 @@ describe("Version - Contract version", function () {
     });
 
     it("should return valid contract version", async function () {
-        const version = await accessManager.version();
-        expect(version).to.equal(1);
+        expect(
+            await accessManager.version()
+        ).to.equal(1n);
     });
 });

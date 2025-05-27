@@ -238,6 +238,21 @@ ReentrancyGuardUpgradeable
         _placeBid(auctionId, bidAmount);
     }
 
+    function getBids(uint256 auctionId)
+    isAuctionExist(auctionId)
+    external view returns (Bid[] memory)
+    {
+        AuctionStorage.Layout storage $ = AuctionStorage.layout();
+        address[] storage bidders = $.biddersList[auctionId];
+        Bid[] memory result = new Bid[](bidders.length);
+
+        for (uint256 i = 0; i < bidders.length; i++) {
+            result[i] = $.bidsByAuction[auctionId][bidders[i]];
+        }
+
+        return result;
+    }
+
     function finaliseAuction(uint256 auctionId) external restricted
     isAuctionClaimReady(auctionId)
     {
