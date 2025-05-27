@@ -1,5 +1,5 @@
 import {ethers, upgrades} from "hardhat";
-import {AccessManager} from "../../typechain-types";
+import {AccessManager} from "../../typechain";
 import {HardhatEthersSigner} from "@nomicfoundation/hardhat-ethers/signers";
 
 export async function deployAccessManager(owner: HardhatEthersSigner): Promise<AccessManager> {

@@ -2,16 +2,17 @@ import {expect} from "chai";
 import "@nomicfoundation/hardhat-chai-matchers";
 import {ethers} from "hardhat";
 import {deployAccessManager} from "./deploys/access-manager.deploy";
-import {AccessManager} from "../typechain-types";
+import {AccessManager} from "../typechain";
 import {HardhatEthersSigner} from "@nomicfoundation/hardhat-ethers/signers";
 
 describe("AccessManager - Contract Registration", function () {
     let accessManager: AccessManager;
     let owner: HardhatEthersSigner;
+    let user: HardhatEthersSigner;
 
     beforeEach(async () => {
-        [owner] = await ethers.getSigners();
-        (accessManager = await deployAccessManager(owner));
+        [owner, user] = await ethers.getSigners();
+        accessManager = await deployAccessManager(owner);
     });
 
     it("should register and retrieve contract address", async () => {
@@ -24,7 +25,7 @@ describe("AccessManager - Contract Registration", function () {
         const receipt = await tx.wait();
 
         // Check that the ContractRegistered event was emitted
-        const event = receipt.logs
+        const event = receipt?.logs
             .map(log => {
                 try {
                     return accessManager.interface.parseLog(log);
@@ -120,7 +121,6 @@ describe("AccessManager - Contract Registration", function () {
     });
 
     it("should return roles assigned to an address", async function () {
-        const [, user] = await ethers.getSigners();
         const roles = await accessManager.getRoles();
         const roleId = roles[0].role;
         const executionDelay = 0;
@@ -132,14 +132,13 @@ describe("AccessManager - Contract Registration", function () {
     });
 
     it("should return role selectors for a registered contract (authorized)", async function () {
-        const [, address] = await ethers.getSigners();
         await accessManager.connect(owner).registerContract(
             "MockResource",
-            await address.getAddress()
+            await user.getAddress()
         );
 
         const roleSelectors = await accessManager.connect(owner).initRoleSelectors(
-            await address.getAddress()
+            await user.getAddress()
         );
 
         await roleSelectors.wait();
@@ -152,7 +151,7 @@ describe("AccessManager - Contract Registration", function () {
 
             for (const selector of selectors) {
                 const assigned = await accessManager.getTargetFunctionRole(
-                    await address.getAddress(),
+                    await user.getAddress(),
                     selector
                 );
                 expect(assigned).to.equal(roleId);
@@ -161,8 +160,6 @@ describe("AccessManager - Contract Registration", function () {
     });
 
     it("should revoke a role from an account", async function () {
-        const [, user] = await ethers.getSigners();
-
         const roles = await accessManager.getRoles();
         const testRoleId = roles[0].role;
 

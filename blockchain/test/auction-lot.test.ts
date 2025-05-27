@@ -3,10 +3,7 @@ import "@nomicfoundation/hardhat-chai-matchers";
 import {deployAuctionLot} from "./deploys/auction-lot.deploy";
 import {ethers} from "hardhat";
 
-import {
-    AccessManager,
-    AuctionLot,
-} from "../typechain-types";
+import {AccessManager, AuctionLot,} from "../typechain";
 import {deployAccessManager} from "./deploys/access-manager.deploy";
 import {HardhatEthersSigner} from "@nomicfoundation/hardhat-ethers/signers";
 import {Roles} from "../app/roles.type";

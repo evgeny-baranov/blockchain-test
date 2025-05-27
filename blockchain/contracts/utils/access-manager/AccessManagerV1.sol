@@ -1,15 +1,19 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.28;
 
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/access/manager/AccessManagerUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
-import {Registry} from "./Registry.sol";
 import {Roles} from "../Roles.sol";
 import {Version} from "../version/Version.sol";
+import {IAccessManagerV1} from "./IAccessManagerV1.sol";
+import {Registry} from "./Registry.sol";
+import {AccessManagerUpgradeable} from "@openzeppelin/contracts-upgradeable/access/manager/AccessManagerUpgradeable.sol";
+import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import {Initializable} from "@openzeppelin/upgrades-core/contracts/Initializable.sol";
+import {Initializable} from "hardhat-deploy/solc_0.8/openzeppelin/proxy/utils/Initializable.sol";
 
 /// @custom:security-contact info@baranov.eu
 contract AccessManagerV1 is
+IAccessManagerV1,
 Version,
 Registry,
 AccessManagerUpgradeable,
@@ -51,7 +55,7 @@ UUPSUpgradeable
         }
     }
 
-    function initRoleSelectors(address resource) external onlyAuthorized  {
+    function initRoleSelectors(address resource) external onlyAuthorized {
         _initRoleSelectors(resource);
     }
 

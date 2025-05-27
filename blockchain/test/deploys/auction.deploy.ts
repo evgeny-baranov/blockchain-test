@@ -1,5 +1,5 @@
 import {ethers, upgrades} from "hardhat";
-import {AccessManager, Auction} from "../../typechain-types";
+import {AccessManager, Auction} from "../../typechain";
 import {Roles} from "../../app/roles.type";
 
 export async function deployAuction(accessManager: AccessManager): Promise<Auction> {

@@ -1,5 +1,5 @@
 import {ethers, upgrades} from "hardhat";
-import {UsdToken, AccessManager} from "../../typechain-types";
+import {AccessManager, UsdToken} from "../../typechain";
 
 export async function deployUsdToken(
     accessManager: AccessManager

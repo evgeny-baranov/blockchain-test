@@ -2,19 +2,21 @@ import {expect} from "chai";
 import "@nomicfoundation/hardhat-chai-matchers";
 import {ethers} from "hardhat";
 import {deployAccessManager} from "./deploys/access-manager.deploy";
-import {AccessManager, Auction, AuctionLot, UsdToken} from "../typechain-types";
+import {AccessManager, Auction, AuctionLot, EuroToken, UsdToken} from "../typechain";
 import {HardhatEthersSigner} from "@nomicfoundation/hardhat-ethers/signers";
 import {deployAuction} from "./deploys/auction.deploy";
 import {deployAuctionLot} from "./deploys/auction-lot.deploy";
 import {deployUsdToken} from "./deploys/usd-token.deploy";
 import {Roles} from "../app/roles.type";
 import {BigNumberish} from "ethers";
+import {deployEuroToken} from "./deploys/euro-token.deploy";
 
 describe("Auction contract test", function () {
     let accessManager: AccessManager;
     let auctionLot: AuctionLot;
     let auction: Auction;
     let usdToken: UsdToken;
+    let eurToken: EuroToken;
     let owner: HardhatEthersSigner;
     let minter: HardhatEthersSigner;
     let burner: HardhatEthersSigner;
@@ -34,11 +36,14 @@ describe("Auction contract test", function () {
         auctionLot = await deployAuctionLot(accessManager);
         auction = await deployAuction(accessManager);
         usdToken = await deployUsdToken(accessManager);
+        usdToken = await deployEuroToken(accessManager);
 
         await accessManager.grantRole(Roles.MINTER_ROLE, minter.address, 0);
         await accessManager.grantRole(Roles.BURNER_ROLE, burner.address, 0);
         await accessManager.grantRole(Roles.CUSTODIAN_ROLE, custodian.address, 0);
         await accessManager.grantRole(Roles.ACCOUNTANT_ROLE, accountant.address, 0);
+
+        await auction.connect(accountant).addAllowedToken(await usdToken.getAddress());
 
         tokenId = await createAuctionLot("test-uri");
 

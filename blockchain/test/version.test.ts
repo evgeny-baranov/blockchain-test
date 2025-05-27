@@ -2,7 +2,7 @@ import {expect} from "chai";
 import "@nomicfoundation/hardhat-chai-matchers";
 import {ethers} from "hardhat";
 import {deployAccessManager} from "./deploys/access-manager.deploy";
-import {AccessManager} from "../typechain-types";
+import {AccessManager} from "../typechain";
 import {HardhatEthersSigner} from "@nomicfoundation/hardhat-ethers/signers";
 
 describe("Version - Contract version", function () {

@@ -2,7 +2,7 @@ import {expect} from "chai";
 import "@nomicfoundation/hardhat-chai-matchers";
 import {ethers} from "hardhat";
 import {deployAccessManager} from "./deploys/access-manager.deploy";
-import {AccessManager, Auction, AuctionLot, UsdToken} from "../typechain-types";
+import {AccessManager, Auction, AuctionLot, UsdToken} from "../typechain";
 import {HardhatEthersSigner} from "@nomicfoundation/hardhat-ethers/signers";
 import {deployAuction} from "./deploys/auction.deploy";
 import {deployAuctionLot} from "./deploys/auction-lot.deploy";
@@ -19,12 +19,13 @@ describe("Auction contract test", function () {
     let minter: HardhatEthersSigner;
     let burner: HardhatEthersSigner;
     let custodian: HardhatEthersSigner;
+    let accountant: HardhatEthersSigner;
     let bidder1: HardhatEthersSigner;
     let bidder2: HardhatEthersSigner;
     let bidder3: HardhatEthersSigner;
 
     beforeEach(async () => {
-        [owner, minter, burner, custodian, bidder1, bidder2, bidder3] = await ethers.getSigners();
+        [owner, minter, burner, custodian, accountant, bidder1, bidder2, bidder3] = await ethers.getSigners();
 
         accessManager = await deployAccessManager(owner);
         auctionLot = await deployAuctionLot(accessManager);
@@ -34,6 +35,9 @@ describe("Auction contract test", function () {
         await accessManager.grantRole(Roles.MINTER_ROLE, minter.address, 0);
         await accessManager.grantRole(Roles.BURNER_ROLE, burner.address, 0);
         await accessManager.grantRole(Roles.CUSTODIAN_ROLE, custodian.address, 0);
+        await accessManager.grantRole(Roles.ACCOUNTANT_ROLE, accountant.address, 0);
+
+        await auction.connect(accountant).addAllowedToken(await usdToken.getAddress());
     });
 
     async function createAuctionLot(uri: string) {
