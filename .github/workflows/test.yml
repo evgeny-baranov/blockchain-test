@@ -15,6 +15,12 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Inject environment variables
+        run: |
+          echo "CLIENT_PORT=3000" >> .env
+          echo "SERVER_PORT=4000" >> .env
+          echo "CHAIN_ID=31337" >> .env
+
       - name: Set up and run blockchain container
         run: |
           docker compose -f docker-compose.yaml up -d blockchain
