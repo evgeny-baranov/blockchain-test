@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
 
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import {CommissionContainerStorage} from "./CommissionContainerStorage.sol";
 import {ICommissionContainer} from "./ICommissionContainer.sol";
-import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import {Initializable} from "hardhat-deploy/solc_0.8/openzeppelin/proxy/utils/Initializable.sol";
 
 abstract contract CommissionContainer is Initializable, ICommissionContainer {
     using CommissionContainerStorage for CommissionContainerStorage.Layout;

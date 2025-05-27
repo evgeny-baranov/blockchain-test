@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.28;
 
-import "@openzeppelin/contracts/access/manager/IAccessManaged.sol";
-
 interface IAuctionLot {
     function mint(address to, string memory uri) external returns (uint256);
 

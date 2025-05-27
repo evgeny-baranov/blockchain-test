@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.28;
 
+import {IAccessManager} from "@openzeppelin/contracts/access/manager/IAccessManager.sol";
 import {Roles} from "./utils/Roles.sol";
 import {IAccessManagerV1} from "./utils/access-manager/IAccessManagerV1.sol";
 import {IRegistry} from "./utils/access-manager/IRegistry.sol";

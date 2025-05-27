@@ -1,21 +1,24 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
 
-import {Auction} from "../Auction.sol";
-import {AuctionLot} from "../AuctionLot.sol";
-import {ViewAccessManagedUpgradeable} from "../utils/ViewAccessManagedUpgradeable.sol";
-import {IRegistry} from "../utils/access-manager/IRegistry.sol";
-import {CommissionContainer} from "../utils/commission-container/CommissionContainer.sol";
-import {ICommissionContainer} from "../utils/commission-container/ICommissionContainer.sol";
-import {Version} from "../utils/version/Version.sol";
-import {AuctionStorage} from "./AuctionStorage.sol";
-import {IAuctionStorage} from "./IAuctionStorage.sol";
 import {AccessManagedUpgradeable} from "@openzeppelin/contracts-upgradeable/access/manager/AccessManagedUpgradeable.sol";
+import {AuctionLot} from "../AuctionLot.sol";
+import {AuctionStorage} from "./AuctionStorage.sol";
+import {Auction} from "../Auction.sol";
+import {CommissionContainer} from "../utils/commission-container/CommissionContainer.sol";
+import {ERC721Holder} from "@openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol";
+import {IAuctionStorage} from "./IAuctionStorage.sol";
+import {ICommissionContainer} from "../utils/commission-container/ICommissionContainer.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {IERC721Receiver} from "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
+import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import {IRegistry} from "../utils/access-manager/IRegistry.sol";
 import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
-import {Initializable} from "@openzeppelin/upgrades-core/contracts/Initializable.sol";
-import {Initializable} from "hardhat-deploy/solc_0.8/openzeppelin/proxy/utils/Initializable.sol";
+import {Time} from "@openzeppelin/contracts/utils/types/Time.sol";
+import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import {Version} from "../utils/version/Version.sol";
+import {ViewAccessManagedUpgradeable} from "../utils/ViewAccessManagedUpgradeable.sol";
 
 contract AuctionV1 is
 Auction,

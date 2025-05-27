@@ -1,8 +1,8 @@
 import {ethers, upgrades} from "hardhat";
-import {AccessManager, Auction} from "../../typechain";
+import {AccessManager, Accounting} from "../../typechain";
 import {Roles} from "../../app/roles.type";
 
-export async function deployAccounting(accessManager: AccessManager): Promise<Auction> {
+export async function deployAccounting(accessManager: AccessManager): Promise<Accounting> {
     const [owner] = await ethers.getSigners();
     const factory = await ethers.getContractFactory("AccountingV1");
     const accounting = await upgrades.deployProxy(factory, [await accessManager.getAddress()], {

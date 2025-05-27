@@ -76,6 +76,34 @@ describe("Auction contract test", function () {
         );
     }
 
+    it("should update commission percent from accountant role", async function () {
+        await auction.connect(
+            accountant
+        ).updateCommissionPercent(23n);
+
+        expect(
+            await auction.connect(accountant).getCommissionPercent()
+        ).to.equal(23n);
+    });
+
+    it("should not allow update commission percent from unauthorised", async function () {
+        await expect(
+            auction.connect(bidder1).updateCommissionPercent(23n)
+        ).to.be.revertedWithCustomError(
+            auction,
+            "AccessManagedUnauthorized"
+        ).withArgs(bidder1.address);
+    });
+
+    it("should not allow read commission percent value from unauthorised", async function () {
+        await expect(
+            auction.connect(bidder1).getCommissionPercent()
+        ).to.be.revertedWithCustomError(
+            auction,
+            "AccessManagedUnauthorized"
+        ).withArgs(bidder1.address);
+    });
+
     it("should create auction lot", async function () {
         const uri = "test-uri";
         const tokenId = await createAuctionLot(uri);
