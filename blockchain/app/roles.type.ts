@@ -1,3 +1,4 @@
+// Role constant
 export const Roles = {
     ADMIN_ROLE: 0n,
     UPDATER_ROLE: 1n,
