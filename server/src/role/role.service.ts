@@ -1,13 +1,14 @@
-import {Injectable, InternalServerErrorException, NotFoundException, OnModuleInit} from '@nestjs/common';
+import {Injectable, NotFoundException, OnModuleInit} from '@nestjs/common';
 import {AddressLike, BigNumberish} from "ethers";
 import {AccessManager} from '@blockchain/contracts';
 import {Roles} from '@blockchain/contracts/AccessManager';
 import {SignerService} from "../signer/signer.service";
 import {ChainContractsService} from "../chain-contracts/chain-contracts.service";
+import {handleSmartContractError} from "../errors/handle-smart-contract-errors";
 
 @Injectable()
 export class RoleService implements OnModuleInit {
-    private contract!: AccessManager;
+    private accessManager!: AccessManager;
 
     constructor(
         private readonly signerService: SignerService,
@@ -16,7 +17,7 @@ export class RoleService implements OnModuleInit {
     }
 
     onModuleInit(): any {
-        this.contract = this.chainContractsService.accessManagerContract;
+        this.accessManager = this.chainContractsService.accessManagerContract;
     }
 
     async getRole(code: string | BigNumberish): Promise<Roles.RoleSelectorsStruct> {
@@ -32,7 +33,7 @@ export class RoleService implements OnModuleInit {
     }
 
     async getAllRoles(): Promise<Roles.RoleSelectorsStruct[]> {
-        const data: Roles.RoleSelectorsStructOutput[] = await this.contract.getRoles();
+        const data: Roles.RoleSelectorsStructOutput[] = await this.accessManager.getRoles();
 
         return data.map(([label, role, selectors]) => ({
             label,
@@ -41,13 +42,17 @@ export class RoleService implements OnModuleInit {
         }));
     }
 
-    async getRolesOf(address: AddressLike): Promise<BigNumberish[]> {
-        return await this.contract.getRolesOf(address);
+    async getRolesOf(address: AddressLike): Promise<Roles.RoleSelectorsStruct[]> {
+        const roles = await this.accessManager.getRolesOf(address);
+
+        return await Promise.all(
+            roles.map((id: BigNumberish) => this.getRole(id))
+        );
     }
 
-    async getMyRoles() {
+    async getMyRoles(): Promise<Roles.RoleSelectorsStruct[]> {
         const address = this.signerService.publicAddress;
-        const roles = await this.contract.getRolesOf(address);
+        const roles = await this.accessManager.getRolesOf(address);
 
         return await Promise.all(
             roles.map((id: BigNumberish) => this.getRole(id))
@@ -58,29 +63,9 @@ export class RoleService implements OnModuleInit {
         const roleObj = await this.getRole(role);
 
         try {
-            await this.contract.revokeRole(roleObj.role, address);
+            await this.accessManager.revokeRole(roleObj.role, address);
         } catch (error) {
-            let message = ["Revoke role role failed"];
-            if (error instanceof Error) {
-                message.push(error.message);
-            }
-
-            if ((error as any).error?.data) {
-                try {
-                    const decoded = this.contract.interface.parseError((error as any).error.data);
-
-                    if (decoded) {
-                        console.error(decoded);
-                        message.push(decoded.name);
-                    }
-                } catch (decodeError) {
-                    console.error('decodeError', decodeError);
-                }
-            }
-
-            console.error(message);
-
-            throw new InternalServerErrorException(message.join(' '));
+            handleSmartContractError(this.accessManager.interface, error);
         }
     }
 
@@ -92,29 +77,9 @@ export class RoleService implements OnModuleInit {
         const roleObj = await this.getRole(role);
 
         try {
-            await this.contract.grantRole(roleObj.role, address, delay);
+            await this.accessManager.grantRole(roleObj.role, address, delay);
         } catch (error) {
-            let message = ["Grant role role failed"];
-            if (error instanceof Error) {
-                message.push(error.message);
-            }
-
-            if ((error as any).error?.data) {
-                try {
-                    const decoded = this.contract.interface.parseError((error as any).error.data);
-
-                    if (decoded) {
-                        console.error(decoded);
-                        message.push(decoded.name);
-                    }
-                } catch (decodeError) {
-                    console.error('decodeError', decodeError);
-                }
-            }
-
-            console.error(message);
-
-            throw new InternalServerErrorException(message.join(' '));
+            handleSmartContractError(this.accessManager.interface, error);
         }
     }
 }

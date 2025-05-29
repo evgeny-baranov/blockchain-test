@@ -1,53 +1,74 @@
-import {Injectable} from '@nestjs/common';
-import {AddressLike} from "ethers";
-import {ChainContractsService} from "../../chain-contracts/chain-contracts.service";
+import {Injectable, OnModuleInit} from '@nestjs/common';
+import {AddressLike} from 'ethers';
+import {Accounting} from '@blockchain/contracts';
+import {ChainContractsService} from '../../chain-contracts/chain-contracts.service';
+import {handleSmartContractError} from "../../errors/handle-smart-contract-errors";
 
 @Injectable()
-export class CommissionService {
+export class CommissionService implements OnModuleInit {
+    private accounting!: Accounting;
     constructor(
-        private readonly chainContractsService: ChainContractsService,
+        private readonly chainContractsService: ChainContractsService
     ) {
     }
 
-    async withdrawCommission(container: string, currency: string, to: AddressLike) {
-        const accounting = this.chainContractsService.accountingContract;
+    onModuleInit() {
+        this.accounting = this.chainContractsService.accountingContract;
+    }
+
+    async withdrawCommission(
+        container: string,
+        currency: string,
+        to: AddressLike,
+    ) {
         const containerAddress = this.chainContractsService.getContractAddress(container);
         const asset = await this.chainContractsService.getCurrencyContract(currency);
 
-        await accounting.withdrawContainerCommission(
-            containerAddress,
-            await asset.getAddress(),
-            to
-        );
+        try {
+            await this.accounting.withdrawContainerCommission(
+                containerAddress,
+                await asset.getAddress(),
+                to,
+            );
+        } catch (error: any) {
+            handleSmartContractError(this.accounting.interface, error);
+        }
     }
 
     async getCommission(container: string, currency: string) {
-        const accounting = this.chainContractsService.accountingContract;
         const containerAddress = this.chainContractsService.getContractAddress(container);
         const asset = await this.chainContractsService.getCurrencyContract(currency);
 
-        return accounting.containerCommissionAmount(
-            containerAddress,
-            await asset.getAddress(),
-        )
+        try {
+            return this.accounting.containerCommissionAmount(
+                containerAddress,
+                await asset.getAddress(),
+            );
+        } catch (error: any) {
+            handleSmartContractError(this.accounting.interface, error);
+        }
     }
 
     async updateCommissionPercent(container: string, commissionPercent: number) {
-        const accounting = this.chainContractsService.accountingContract;
         const containerAddress = this.chainContractsService.getContractAddress(container);
 
-        await accounting.updateContainerCommissionPercent(
-            containerAddress,
-            commissionPercent
-        )
+        try {
+            await this.accounting.updateContainerCommissionPercent(
+                containerAddress,
+                commissionPercent,
+            );
+        } catch (error: any) {
+            handleSmartContractError(this.accounting.interface, error);
+        }
     }
 
     getCommissionPercent(container: string) {
-        const accounting = this.chainContractsService.accountingContract;
         const containerAddress = this.chainContractsService.getContractAddress(container);
 
-        return accounting.containerCommissionPercent(
-            containerAddress
-        )
+        try {
+            return this.accounting.containerCommissionPercent(containerAddress);
+        } catch (error: any) {
+            handleSmartContractError(this.accounting.interface, error);
+        }
     }
 }

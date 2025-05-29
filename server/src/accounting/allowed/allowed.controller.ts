@@ -21,7 +21,7 @@ export class AllowedController {
         @Param("container") container: string,
         @Param("creditAsset") creditAsset: AddressLike,
     ) {
-        this.allowedService.addContainerAllowedToken(
+        return this.allowedService.addContainerAllowedToken(
             container,
             creditAsset
         )
@@ -32,7 +32,7 @@ export class AllowedController {
         @Param("container") container: string,
         @Param("creditAsset") creditAsset: AddressLike
     ) {
-        this.allowedService.removeAllowedToken(
+        return this.allowedService.removeAllowedToken(
             container,
             creditAsset
         )

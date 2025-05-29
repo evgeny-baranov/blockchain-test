@@ -21,7 +21,7 @@ export class AuctionController {
     async cancelAuction(
         @Param('auctionId') auctionId: BigNumberish,
     ) {
-        await this.auctionService.cancelAuction(auctionId);
+        return this.auctionService.cancelAuction(auctionId);
     }
 
     @Get(':auctionId')

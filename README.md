@@ -1,6 +1,6 @@
 # Auction Hardhat Project
 
-## Run blockcahin service
+## Run blockchain service
 
 .env file example:
 
@@ -54,7 +54,6 @@ docker-compose up server
 ```
 
 # API
-
 Use test *.http files: `server/test/http`
 
 # Update
@@ -63,4 +62,12 @@ docker-compose -f ./docker-compose.yaml run blockchain npm update
 ```
 ```shell
 docker-compose -f ./docker-compose.yaml run server npm update
+```
+
+# Unit test
+```shell
+docker-compose -f ./docker-compose.yaml run blockchain make coverage
+```
+```shell
+docker-compose -f ./docker-compose.yaml run server npx jest --coverage
 ```

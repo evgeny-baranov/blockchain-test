@@ -37,7 +37,7 @@ export class BalanceService {
         const contract = await this.chainContractsService.getCurrencyContract(currency);
 
         try {
-            contract.mintTo(container, amount);
+            await contract.mintTo(container, amount);
         } catch (error: any) {
             handleSmartContractError(contract.interface, error);
         }
