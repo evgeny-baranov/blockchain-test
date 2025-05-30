@@ -14,7 +14,10 @@ GET {{local}}/accounting/allowed/{{auction}}
 PUT {{local}}/accounting/allowed/{{auction}}/{{usd}}
 ### Allow a credit asset for a container
 PUT {{local}}/accounting/allowed/{{auction}}/{{eur}}
-
+### Remove a credit asset from a container
+DELETE {{local}}/accounting/allowed/{{auction}}/{{usd}}
+### Remove a credit asset from a container
+DELETE {{local}}/accounting/allowed/{{auction}}/{{eur}}
 
 
 ### Get all allowed credit assets for a container
