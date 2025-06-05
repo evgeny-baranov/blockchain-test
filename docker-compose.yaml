@@ -27,7 +27,7 @@ services:
       - ./server:/server
       - ./server/node_modules:/node_modules
       - ./blockchain/artifacts:/blockchain/artifacts
-      - ./blockchain/typechain-types:/blockchain/typechain-types
+      - ./blockchain/typechain:/blockchain/typechain
       - ./blockchain/dist:/blockchain/dist
       - ./blockchain/ignition/deployments/chain-${CHAIN_ID}/deployed_addresses.json:/blockchain/dist/${CHAIN_ID}-contracts.json
     command: npm run start:dev

@@ -5,7 +5,9 @@ import {Currency} from "../../types/currency.type";
 
 @Controller('accounting/commission/:container')
 export class CommissionController {
-    constructor(private readonly commissionService: CommissionService) {
+    constructor(
+        private readonly commissionService: CommissionService
+    ) {
     }
 
 
