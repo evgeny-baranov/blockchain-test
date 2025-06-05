@@ -19,7 +19,7 @@ export default buildModule("PostDeploySetupModule", (builder) => {
             from: owner,
         });
 
-        builder.call(accessManagerImplementation, "registerContract", [label, auctionLot], {
+        builder.call(accessManagerImplementation, "registerContract", [label, target], {
             id: `registerContract_${label}`,
             from: owner
         });
