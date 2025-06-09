@@ -47,7 +47,7 @@ export class AuctionService implements OnModuleInit {
             await tx.wait();
         }
 
-        const creditAssetContract = await this.chainContractsService.getCurrencyContract(dto.creditCurrency);
+        const creditAssetContract = this.chainContractsService.getCurrencyContract(dto.creditCurrency);
 
         try {
             await this.auctionContract.startAuction(

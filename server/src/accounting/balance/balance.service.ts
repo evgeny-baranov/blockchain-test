@@ -15,8 +15,8 @@ export class BalanceService {
     }
 
     async getBalance(container: AddressLike) {
-        const usd = await this.chainContractsService.getCurrencyContract('usd');
-        const eur = await this.chainContractsService.getCurrencyContract('eur');
+        const usd = this.chainContractsService.getCurrencyContract('usd');
+        const eur = this.chainContractsService.getCurrencyContract('eur');
 
         try {
             return {
@@ -34,7 +34,7 @@ export class BalanceService {
         currency: Currency,
         amount: BigNumberish
     ) {
-        const contract = await this.chainContractsService.getCurrencyContract(currency);
+        const contract = this.chainContractsService.getCurrencyContract(currency);
 
         try {
             await contract.mintTo(container, amount);
@@ -44,8 +44,8 @@ export class BalanceService {
     }
 
     async burnToken(container: AddressLike, currency: Currency, amount: BigNumberish) {
-        const contract = await this.chainContractsService.getCurrencyContract(currency);
-        const signerAddress = this.signerService.getSignerWallet().address;
+        const contract = this.chainContractsService.getCurrencyContract(currency);
+        const signerAddress = this.signerService.publicAddress;
 
         const allowance = await contract.allowance(
             container,
@@ -56,7 +56,7 @@ export class BalanceService {
             try {
                 const approveTx = await contract.approve(
                     signerAddress,
-                    amount
+                    BigInt(amount) - allowance
                 );
                 await approveTx.wait();
             } catch (error: any) {

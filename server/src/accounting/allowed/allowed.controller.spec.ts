@@ -4,7 +4,6 @@ import {AllowedService} from './allowed.service';
 
 describe('AllowedController', () => {
     let allowedController: AllowedController;
-    let allowedService: AllowedService;
 
     const mockAllowedService = {
         getAllowedTokens: jest.fn(),
@@ -24,7 +23,6 @@ describe('AllowedController', () => {
         }).compile();
 
         allowedController = module.get<AllowedController>(AllowedController);
-        allowedService = module.get<AllowedService>(AllowedService);
     });
 
     it('returns allowed tokens for a valid container', async () => {

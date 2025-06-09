@@ -22,7 +22,7 @@ export class CommissionService implements OnModuleInit {
         to: AddressLike,
     ) {
         const containerAddress = this.chainContractsService.getContractAddress(container);
-        const asset = await this.chainContractsService.getCurrencyContract(currency);
+        const asset = this.chainContractsService.getCurrencyContract(currency);
 
         try {
             await this.accounting.withdrawContainerCommission(
@@ -37,7 +37,7 @@ export class CommissionService implements OnModuleInit {
 
     async getCommission(container: string, currency: string) {
         const containerAddress = this.chainContractsService.getContractAddress(container);
-        const asset = await this.chainContractsService.getCurrencyContract(currency);
+        const asset = this.chainContractsService.getCurrencyContract(currency);
 
         try {
             return this.accounting.containerCommissionAmount(
