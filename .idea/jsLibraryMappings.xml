@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="JavaScriptLibraryMappings">
+    <file url="file://$PROJECT_DIR$/blockchain" libraries="{blockchain-test/blockchain/node_modules}" />
+    <file url="file://$PROJECT_DIR$/client" libraries="{blockchain-test/client/node_modules}" />
+    <file url="file://$PROJECT_DIR$/server" libraries="{blockchain-test/server/node_modules}" />
+    <file url="PROJECT" libraries="{blockchain-test/blockchain/node_modules, blockchain-test/client/node_modules, blockchain-test/server/node_modules}" />
+    <includedPredefinedLibrary name="Node.js Core" />
+  </component>
+</project>

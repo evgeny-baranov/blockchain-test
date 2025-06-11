@@ -1,17 +1,4 @@
 services:
-  client:
-    image: node:20
-    tty: true
-    working_dir: /client
-    ports:
-      - ${CLIENT_PORT}:${CLIENT_PORT}
-    volumes:
-      - ./client:/client
-      - ./client/node_modules:/client/node_modules
-    command: npm run start
-    networks:
-      - hardhat-network
-
   server:
     image: node:20
     tty: true
