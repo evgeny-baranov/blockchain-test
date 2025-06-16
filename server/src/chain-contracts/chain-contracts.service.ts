@@ -116,7 +116,7 @@ export class ChainContractsService implements OnModuleInit {
         console.log(`✅ Loaded proxied contracts for chain ${this.chainId}:`, this.addresses);
     }
 
-    async getCurrencyContract(currency: string): Promise<IERC20BaseToken> {
+    getCurrencyContract(currency: string): IERC20BaseToken {
         switch (currency.toLowerCase()) {
             case 'usd':
                 return this.usdContract;

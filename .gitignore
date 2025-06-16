@@ -9,9 +9,10 @@ blockchain/node_modules
 /blockchain/typechain
 /blockchain/typechain-types
 
-# solidity-coverage files
+# coverage files
 /blockchain/coverage
 /blockchain/coverage.json
+/server/coverage
 
 # Hardhat Ignition default folder for deployments against a local node
 /blockchain/ignition/deployments/chain-31337

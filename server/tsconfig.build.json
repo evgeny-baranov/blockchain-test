@@ -5,7 +5,8 @@
     "node_modules",
     "test",
     "dist",
-    "**/*.spec.ts"
+    "**/*.spec.ts",
+    "../blockchain/dist"
   ],
   "compilerOptions": {
     "outDir": "./dist",
@@ -18,7 +19,6 @@
     }
   },
   "include": [
-    "src/**/*",
-    "../blockchain/dist/**/*"
+    "src/**/*"
   ]
 }

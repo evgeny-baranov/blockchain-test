@@ -1,19 +1,6 @@
 services:
-  client:
-    image: node:20
-    tty: true
-    working_dir: /client
-    ports:
-      - ${CLIENT_PORT}:${CLIENT_PORT}
-    volumes:
-      - ./client:/client
-      - ./client/node_modules:/client/node_modules
-    command: npm run start
-    networks:
-      - hardhat-network
-
   server:
-    image: node:20
+    image: ${ARTIFACTORY:-}node:20
     tty: true
     env_file:
       - .env
@@ -33,7 +20,7 @@ services:
     command: npm run start:dev
 
   blockchain:
-    image: node:20
+    image: ${ARTIFACTORY:-}node:20
     tty: true
     ports:
       - "8545:8545"
