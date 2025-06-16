@@ -6,8 +6,8 @@
   "transform": {
     "^.+\\.(ts)$": "ts-jest"
   },
-  "modulePaths": ["../src"],
+
   "moduleNameMapper": {
-    "^@blockchain/(.*)$": "<rootDir>/../blockchain/dist/$1"
+    "^@blockchain/(.*)$": "/blockchain/dist/$1"
   }
 }
