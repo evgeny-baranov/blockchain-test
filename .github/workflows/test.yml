@@ -2,7 +2,7 @@ name: Run Hardhat Tests in Docker
 
 on:
   pull_request:
-    branches: [ main ]
+    branches: [ master ]
   workflow_dispatch:
 permissions:
   contents: read
