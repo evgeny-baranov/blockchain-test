@@ -1,12 +1,11 @@
 name: Run Hardhat Tests in Docker
 
 on:
-  push:
-    branches: [ main ]
   pull_request:
     branches: [ main ]
   workflow_dispatch:
-
+permissions:
+  contents: read
 jobs:
   test:
     runs-on: ubuntu-latest
