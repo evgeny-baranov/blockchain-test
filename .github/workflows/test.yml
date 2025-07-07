@@ -1,5 +1,8 @@
 name: Run Hardhat Tests in Docker
 
+permissions:
+  contents: read
+
 on:
   push:
     branches: [ master ]
