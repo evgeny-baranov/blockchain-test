@@ -64,10 +64,21 @@ docker-compose -f ./docker-compose.yaml run blockchain npm update
 docker-compose -f ./docker-compose.yaml run server npm update
 ```
 
-# Unit test
+# Blockchain test 
 ```shell
 docker-compose -f ./docker-compose.yaml run blockchain make coverage
 ```
+
+# Server test
+Run unit tests
 ```shell
-docker-compose -f ./docker-compose.yaml run server npx jest --coverage
+docker-compose -f ./docker-compose.yaml run server npm run test:cov
+```
+Run tests with coverage
+```shell
+docker-compose -f ./docker-compose.yaml run server npm run test:cov
+```
+Run e2e test
+```shell
+docker-compose -f ./docker-compose.yaml run server npm run test:e2e
 ```
